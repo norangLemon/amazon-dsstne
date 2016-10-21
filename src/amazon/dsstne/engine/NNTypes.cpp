@@ -751,22 +751,22 @@ _pbSparseTransposedData(NULL)
                 if (vStartType == ncUint)
                 {
                     vector<uint32_t> vTempSparseStart(examplesDim.getSize());
-                    sparseStartVar.getVar((uint32_t*)vTempSparseStart.data());
+                    sparseStartVar.getVar(reinterpret_cast<uint32_t*>(vTempSparseStart.data()));
                     copy(vTempSparseStart.begin(), vTempSparseStart.end(), _vSparseStart.begin());
                 }
                 else
-                    sparseStartVar.getVar((uint64_t*)_vSparseStart.data());
+                    sparseStartVar.getVar(reinterpret_cast<uint64_t*>(_vSparseStart.data()));
                     
                 NcType vEndType                 = sparseEndVar.getType();    
                 if (vEndType == ncUint)
                 {
                     vector<uint32_t> vTempSparseEnd(examplesDim.getSize());
-                    sparseEndVar.getVar((uint32_t*)vTempSparseEnd.data());
+                    sparseEndVar.getVar(reinterpret_cast<uint32_t*>(vTempSparseEnd.data()));
                     copy(vTempSparseEnd.begin(), vTempSparseEnd.end(), _vSparseEnd.begin());
                 }
                 else                    
-                    sparseEndVar.getVar((uint64_t*)_vSparseEnd.data());
-                sparseIndexVar.getVar((uint32_t*)_vSparseIndex.data());
+                    sparseEndVar.getVar(reinterpret_cast<uint64_t*>(_vSparseEnd.data()));
+                sparseIndexVar.getVar(reinterpret_cast<uint32_t*>(_vSparseIndex.data()));
                               
                 // If not Boolean, then read templated point values
                 if (!(_attributes & NNDataSetEnums::Boolean))

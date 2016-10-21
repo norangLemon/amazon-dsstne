@@ -2573,9 +2573,9 @@ void NNNetwork::AllocatePeerBuffers()
             RTERROR(status, "NNNetwork::AllocatePeerBuffers: Error getting second P2P IPCMemHandle");
             MPI_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, pMemHandle, 2 * sizeof(cudaIpcMemHandle_t), MPI_BYTE, MPI_COMM_WORLD);
             unsigned int peer                   = 2 * ((getGpu()._id + getGpu()._numprocs - 1) % getGpu()._numprocs);   
-            status = cudaIpcOpenMemHandle((void**)&(_pPeerBuffer[0]), pMemHandle[peer], cudaIpcMemLazyEnablePeerAccess);
+            status = cudaIpcOpenMemHandle(reinterpret_cast<void**>(&(_pPeerBuffer[0])), pMemHandle[peer], cudaIpcMemLazyEnablePeerAccess);
             RTERROR(status, "NNNetwork::AllocatePeerBuffers: Unable to open first peer IPCMemHandle");        
-            status = cudaIpcOpenMemHandle((void**)&(_pPeerBuffer[1]), pMemHandle[peer + 1], cudaIpcMemLazyEnablePeerAccess);
+            status = cudaIpcOpenMemHandle(reinterpret_cast<void**>(&(_pPeerBuffer[1])), pMemHandle[peer + 1], cudaIpcMemLazyEnablePeerAccess);
             RTERROR(status, "NNNetwork::AllocatePeerBuffers: Unable to open second peer IPCMemHandle");
         }
         else
@@ -3874,7 +3874,7 @@ bool NNNetwork::P2P_Bcast(void* pBuffer, size_t size)
                     {
                         size_t start                        = (size * segment) / getGpu()._numprocs;
                         size_t end                          = (size * (segment + 1)) / getGpu()._numprocs;
-                        status                              = cudaMemcpy((char*)GetPeerBackBuffer() + start, (char*)GetP2PSendBuffer() + start, end - start, cudaMemcpyDefault);
+                        status                              = cudaMemcpy(reinterpret_cast<char*>(GetPeerBackBuffer()) + start, reinterpret_cast<char*>(GetP2PSendBuffer()) + start, end - start, cudaMemcpyDefault);
                         RTERROR(status, "NNNetwork::P2P_Bcast: Failure to copy source data to P2P backbuffer");                    
                         segment++;
                     }

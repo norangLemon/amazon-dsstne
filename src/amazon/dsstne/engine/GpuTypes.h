@@ -440,11 +440,11 @@ void GpuBuffer<T>::Allocate()
     cudaError_t status;
     if (_bPinned)
     {
-        status = cudaHostAlloc((void **)&_pSysData, _length * sizeof(T), cudaHostAllocMapped);
+        status = cudaHostAlloc(reinterpret_cast<void**>(&_pSysData), _length * sizeof(T), cudaHostAllocMapped);
         RTERROR(status, "cudaHostalloc GpuBuffer::Allocate failed");
         getGpu()._totalCPUMemory                    += _length * sizeof(T);
         getGpu()._totalGPUMemory                    += _length * sizeof(T);
-        status = cudaHostGetDevicePointer((void **)&_pDevData, (void *)_pSysData, 0);
+        status = cudaHostGetDevicePointer(reinterpret_cast<void **>(&_pDevData), reinterpret_cast<void *>(_pSysData), 0);
         RTERROR(status, "cudaGetDevicePointer GpuBuffer::failed to get device pointer");
         memset(_pSysData, 0, _length * sizeof(T));
     }
@@ -457,10 +457,10 @@ void GpuBuffer<T>::Allocate()
             memset(_pSysData, 0, _length * sizeof(T));
         }
 
-        status = cudaMalloc((void **) &_pDevData, _length * sizeof(T));
+        status = cudaMalloc(reinterpret_cast<void **>(&_pDevData), _length * sizeof(T));
         getGpu()._totalGPUMemory                +=  _length * sizeof(T);
         RTERROR(status, "cudaMalloc GpuBuffer::Allocate failed");
-        status = cudaMemset((void *) _pDevData, 0, _length * sizeof(T));
+        status = cudaMemset(reinterpret_cast<void *>(_pDevData), 0, _length * sizeof(T));
         RTERROR(status, "cudaMemset GpuBuffer::Allocate failed");
     }
 #ifdef MEMTRACKING
