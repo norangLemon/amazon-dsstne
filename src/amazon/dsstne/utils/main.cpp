@@ -139,8 +139,8 @@ int main(int argc, char** argv)
         vector<uint32_t> vDataPoints(batch);
         GpuBuffer<NNFloat>* pbTarget        = new GpuBuffer<NNFloat>(batch * STRIDE, true);
         GpuBuffer<NNFloat>* pbOutput        = new GpuBuffer<NNFloat>(batch * STRIDE, true);
-        NNDataSet<NNFloat>* pInputDataSet   = (NNDataSet<NNFloat>*)vDataSet[inputIndex];
-        NNDataSet<NNFloat>* pOutputDataSet  = (NNDataSet<NNFloat>*)vDataSet[outputIndex];
+        NNDataSet<NNFloat>* pInputDataSet   = reinterpret_cast<NNDataSet<NNFloat>*>(vDataSet[inputIndex]);
+        NNDataSet<NNFloat>* pOutputDataSet  = reinterpret_cast<NNDataSet<NNFloat>*>(vDataSet[outputIndex]);
         GpuBuffer<NNFloat>* pbKey           = new GpuBuffer<NNFloat>(batch * K, true);
         GpuBuffer<unsigned int>* pbUIValue  = new GpuBuffer<unsigned int>(batch * K, true);
         GpuBuffer<NNFloat>* pbFValue        = new GpuBuffer<NNFloat>(batch * K, true);
@@ -173,9 +173,9 @@ int main(int argc, char** argv)
             // Open up pointers to GPU 0 memory buffers
             if (getGpu()._id != 0)
             {
-                cudaError_t status          = cudaIpcOpenMemHandle((void**)&pMultiKey, keyMemHandle, cudaIpcMemLazyEnablePeerAccess);
+                cudaError_t status          = cudaIpcOpenMemHandle(reinterpret_cast<void**>(&pMultiKey), keyMemHandle, cudaIpcMemLazyEnablePeerAccess);
                 RTERROR(status, "cudaIpcOpenMemHandle: Unable to open key IPCMemHandle");        
-                status                      = cudaIpcOpenMemHandle((void**)&pMultiFValue, valMemHandle, cudaIpcMemLazyEnablePeerAccess);
+                status                      = cudaIpcOpenMemHandle(reinterpret_cast<void**>(&pMultiFValue), valMemHandle, cudaIpcMemLazyEnablePeerAccess);
                 RTERROR(status, "cudaIpcOpenMemHandle: Unable to open value IPCMemHandle");    
             }  
         }
