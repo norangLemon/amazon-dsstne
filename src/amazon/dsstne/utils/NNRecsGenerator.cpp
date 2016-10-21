@@ -103,7 +103,7 @@ void NNRecsGenerator::generateRecs(NNNetwork *xNetwork,
 	outputBufferSize = xNetwork->GetBufferSize(recsGenLayerLabel);
     }
 
-    float *hOutputBuffer           = (float*)malloc(sizeof(float)*outputBufferSize);
+    float *hOutputBuffer           = reinterpret_cast<float*>(malloc(sizeof(float)*outputBufferSize));
    
     // Get P2P handles to multi-gpu data on node 0
     if (bMultiGPU)
@@ -125,9 +125,9 @@ void NNRecsGenerator::generateRecs(NNNetwork *xNetwork,
             // Open up pointers to GPU 0 memory buffers
             if (getGpu()._id != 0)
             {
-                cudaError_t status          = cudaIpcOpenMemHandle((void**)&pMultiKey, keyMemHandle, cudaIpcMemLazyEnablePeerAccess);
+                cudaError_t status          = cudaIpcOpenMemHandle(reinterpret_cast<void**>(&pMultiKey), keyMemHandle, cudaIpcMemLazyEnablePeerAccess);
                 RTERROR(status, "cudaIpcOpenMemHandle: Unable to open key IPCMemHandle");
-                status                      = cudaIpcOpenMemHandle((void**)&pMultiUIValue, valMemHandle, cudaIpcMemLazyEnablePeerAccess);
+                status                      = cudaIpcOpenMemHandle(reinterpret_cast<void**>(&pMultiUIValue), valMemHandle, cudaIpcMemLazyEnablePeerAccess);
                 RTERROR(status, "cudaIpcOpenMemHandle: Unable to open value IPCMemHandle");
             }
 
