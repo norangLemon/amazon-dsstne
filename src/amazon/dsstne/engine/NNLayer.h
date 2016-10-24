@@ -15,6 +15,7 @@
 #ifndef __NVCC__
 
 #include <map>
+#include <memory>
 #include <netcdf>
 
 #include "GpuBuffer.h"
@@ -134,9 +135,9 @@ private:
     vector<NNLayer*>            _vOutgoingSkip;             // List of outgoing skip layer targets
     vector<NNFloat>             _vUnit;                     // Layer's units
     vector<NNFloat>             _vDelta;                    // Layer's deltas
-    GpuBuffer<NNFloat>*         _pbUnit;                    // GPU memory for unit activations
-    GpuBuffer<NNFloat>*         _pbDelta;                   // GPU memory for unit deltas  
-    GpuBuffer<NNFloat>*         _pbDropout;                 // Dropout random values if active
+    unique_ptr<GpuBuffer<NNFloat>> _pbUnit;                 // GPU memory for unit activations
+    unique_ptr<GpuBuffer<NNFloat>> _pbDelta;                // GPU memory for unit deltas
+    unique_ptr<GpuBuffer<NNFloat>> _pbDropout;              // Dropout random values if active
     int32_t                     _priority;                  // Mutable priority for calculating propagation ordering
     NNLayer(NNLayerDescriptor& l, uint32_t batch);
     ~NNLayer();
