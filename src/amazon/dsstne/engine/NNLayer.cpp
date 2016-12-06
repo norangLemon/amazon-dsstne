@@ -365,7 +365,7 @@ void NNLayer::RefreshParallelization()
     uint32_t poolingOutputs = 0;    
     
     // Count number of inputs and outputs of each type
-    for (auto l : _vIncomingLayer)
+    for (const auto& l : _vIncomingLayer)
     {
         switch (l->_type)
         {
@@ -383,7 +383,7 @@ void NNLayer::RefreshParallelization()
         }
     }
     
-    for (auto l : _vOutgoingLayer)
+    for (const auto& l : _vOutgoingLayer)
     {
         switch (l->_type)
         {
@@ -738,7 +738,7 @@ void NNLayer::ForwardPropagateFullyConnected(uint32_t position, uint32_t batch, 
             }
 
             // Copy data from incoming skip layers
-            for (auto l : _vIncomingSkip)
+            for (const auto& l : _vIncomingSkip)
             {
                 kAddBuffers(_pbUnit->_pDevData, l->_pbUnit->_pDevData, batch * _stride);
             }
@@ -832,7 +832,7 @@ void NNLayer::ForwardPropagateFullyConnected(uint32_t position, uint32_t batch, 
             }
             
             // Copy data from incoming skip layers
-            for (auto l : _vIncomingSkip)
+            for (const auto& l : _vIncomingSkip)
             {
                 kAddBuffers(_pbUnit->_pDevData, l->_pbUnit->_pDevData, batch * _localStride);
             }            
@@ -1030,7 +1030,7 @@ void NNLayer::ForwardPropagateConvolutional(uint32_t position, uint32_t batch, b
             }
             
             // Copy data from incoming skip layers
-            for (auto l : _vIncomingSkip)
+            for (const auto& l : _vIncomingSkip)
             {
                 kAddBuffers(_pbUnit->_pDevData, l->_pbUnit->_pDevData, batch * _stride);
             }
@@ -1102,7 +1102,7 @@ void NNLayer::ForwardPropagatePooling(uint32_t position, uint32_t batch, bool bT
         }
 
         // Copy data from incoming skip layers
-        for (auto l : _vIncomingSkip)
+        for (const auto& l : _vIncomingSkip)
         {
             kAddBuffers(_pbUnit->_pDevData, l->_pbUnit->_pDevData, batch * _stride);
         }        
@@ -1360,7 +1360,7 @@ void NNLayer::BackPropagateConvolutional(uint32_t position, uint32_t batch, NNFl
         }    
         
         // Copy deltas to incoming skip layers
-        for (auto l : _vIncomingSkip)
+        for (const auto& l : _vIncomingSkip)
         {
             if (l->_deltaUpdateCount > 0)
             {
@@ -1441,7 +1441,7 @@ void NNLayer::BackPropagatePooling(uint32_t position, uint32_t batch, NNFloat al
         }    
         
         // Copy deltas to incoming layers
-        for (auto l : _vIncomingSkip)
+        for (const auto& l : _vIncomingSkip)
         {
             if (l->_deltaUpdateCount > 0)
             {
@@ -1607,7 +1607,7 @@ void NNLayer::BackPropagateFullyConnected(uint32_t position, uint32_t batch, NNF
         }    
         
         // Copy deltas to incoming layers
-        for (auto l : _vIncomingSkip)
+        for (const auto& l : _vIncomingSkip)
         {
             if (l->_deltaUpdateCount > 0)
             {
@@ -1780,7 +1780,7 @@ void NNLayer::BackPropagateFullyConnected(uint32_t position, uint32_t batch, NNF
         }
 
         // Copy deltas to incoming layers that skip into this layer
-        for (auto l : _vIncomingSkip)
+        for (const auto& l : _vIncomingSkip)
         {
             if (l->_deltaUpdateCount > 0)
             {

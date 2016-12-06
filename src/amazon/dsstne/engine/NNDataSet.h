@@ -638,7 +638,7 @@ template<typename T> bool NNDataSet<T>::CalculateSparseDatapointCounts()
         uint64_t N                              = _width * _height * _length;
         _vSparseDatapointCount.resize(N);
         std::fill(_vSparseDatapointCount.begin(), _vSparseDatapointCount.end(), 0);
-        for (auto x : _vSparseIndex)
+        for (const auto& x : _vSparseIndex)
         {
             // Check for boundary violation and stop before it corrupts CPU memory
             if (x >= _width)
