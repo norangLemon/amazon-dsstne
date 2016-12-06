@@ -351,7 +351,7 @@ _pbCUDNNWorkspace()
 {
 
     // Allocate layers
-    for (auto l: d._vLayerDescriptor)
+    for (auto& l: d._vLayerDescriptor)
     {
         _vLayer.push_back(new NNLayer(l, batch));
         _mLayer[_vLayer.back()->_name]          = _vLayer.back();
@@ -375,11 +375,11 @@ _pbCUDNNWorkspace()
     }
 
     // Add skip layers and pooling connections
-    for (auto l : _vLayer)
+    for (const auto& l : _vLayer)
     {
         
         // Handle skip connections
-        for (auto s : l->_vSkip)
+        for (const auto& s : l->_vSkip)
         {
             NNLayer* pLayer = _mLayer[s];
             
@@ -400,7 +400,7 @@ _pbCUDNNWorkspace()
         // Add pooling connections
         if (l->_type == NNLayer::Type::Pooling)
         {
-            for (auto s: l->_vSource)
+            for (const auto& s: l->_vSource)
             {
                 NNLayer* pLayer = _mLayer[s]; 
                 l->_vIncomingLayer.push_back(pLayer);
@@ -412,7 +412,7 @@ _pbCUDNNWorkspace()
     }
 
     // Allocate weights between layers
-    for (auto wd: d._vWeightDescriptor)
+    for (auto& wd: d._vWeightDescriptor)
     {
         NNLayer* pInputLayer                    = _mLayer[wd._inputLayer];
         NNLayer* pOutputLayer                   = _mLayer[wd._outputLayer];
@@ -551,7 +551,7 @@ _pbCUDNNWorkspace()
 
 void NNNetwork::Randomize()
 {
-    for (auto pw : _vWeight)
+    for (const auto& pw : _vWeight)
         pw->Randomize();
 }
 
@@ -568,7 +568,7 @@ void NNNetwork::SetBatch(uint32_t batch)
     if (batch != _batch)
     {
         _batch                  = batch;
-        for (auto pL: _vLayer)
+        for (const auto& pL: _vLayer)
         {
             pL->SetBatch(batch);
         }       
@@ -787,7 +787,7 @@ void NNNetwork::RefreshState()
         _bAllDataLoaded                         = true;
 
         // Always need data sets (even if empty) to predict or train
-        for (auto l: _vInputLayer)
+        for (const auto& l: _vInputLayer)
         {
             if (l->_pDataSet == NULL)
             {
@@ -800,7 +800,7 @@ void NNNetwork::RefreshState()
         // If validation or training, need data sets for all output layers
         if (_mode != Prediction)
         {
-            for (auto l: _vOutputLayer)
+            for (const auto& l: _vOutputLayer)
             {
                 if (l->_pDataSet == NULL)
                 {
@@ -815,7 +815,7 @@ void NNNetwork::RefreshState()
     if (_bDirty)
     {
         // Reallocate layers if batch size doesn't match
-        for (auto l: _vLayer)
+        for (const auto& l: _vLayer)
         {
             if (l->_bDirty)
             {
@@ -824,7 +824,7 @@ void NNNetwork::RefreshState()
         }
 
         // Add weight gradients and velocity if needed
-        for (auto w: _vWeight)
+        for (const auto& w: _vWeight)
         {
             w->RefreshState(this, _trainingMode);
         }
@@ -864,9 +864,9 @@ void NNNetwork::ClearDataSets()
 {
     _examples                                   = 0;
     _bExamplesFound                             = false;
-    for (auto l: _vInputLayer)
+    for (const auto& l: _vInputLayer)
          l->_pDataSet                           = NULL;
-    for (auto l: _vOutputLayer)
+    for (const auto& l: _vOutputLayer)
          l->_pDataSet                           = NULL;
 }
 
@@ -875,9 +875,9 @@ void NNNetwork::LoadDataSets(vector<NNDataSetBase*>& vData)
 {
     // Search for a data set to match each input layer
     _bAllDataLoaded                             = false;  
-    for (auto l: _vInputLayer)
+    for (const auto& l: _vInputLayer)
     {
-        for (auto d: vData)
+        for (const auto& d: vData)
         {
             if (l->_dataSet.compare(d->_name) == 0)
             {
@@ -931,9 +931,9 @@ void NNNetwork::LoadDataSets(vector<NNDataSetBase*>& vData)
     }
 
     // Search for a data set to match each output layer
-    for (auto l: _vOutputLayer)
+    for (const auto& l: _vOutputLayer)
     {
-        for (auto d: vData)
+        for (const auto& d: vData)
         {
             if (l->_dataSet.compare(d->_name) == 0)
             {
@@ -1001,7 +1001,7 @@ void NNNetwork::LoadBatch()
         batch                               = _examples - _position;
 
     // Now load input
-    for (auto l: _vInputLayer)
+    for (const auto& l: _vInputLayer)
     {
         switch (_mode)
         {
@@ -1046,7 +1046,7 @@ void NNNetwork::SaveWeights(const string& fname, const string& inputLayer, const
             goto exit;
         }
 
-        for (auto w: _vWeight)
+        for (const auto& w: _vWeight)
         {
             if ((w->_inputLayer._name == pInputLayer->_name) && (w->_outputLayer._name == pOutputLayer->_name))
             {
@@ -1289,7 +1289,7 @@ void NNNetwork::PredictBatch(uint32_t layers)
     LoadBatch();
 
     // Now run forward through all layers
-    for (auto l: _vFPOrder)
+    for (const auto& l: _vFPOrder)
     {
         l->ForwardPropagate(_position, batch, false);
     }
@@ -1337,7 +1337,7 @@ void NNNetwork::PredictTrainingBatch(uint32_t layers)
     LoadBatch();
 
     // Now run forward through all layers
-    for (auto l: _vFPOrder)
+    for (const auto& l: _vFPOrder)
     {
         l->ForwardPropagate(_position, batch, true);
     }
@@ -1394,7 +1394,7 @@ void NNNetwork::PredictValidationBatch(uint32_t layers)
 
     // Now run forward through all layers
     ClearUpdates();
-    for (auto l: _vFPOrder)
+    for (const auto& l: _vFPOrder)
     {
         l->ForwardPropagate(_position, batch, false);
     }
@@ -1452,7 +1452,7 @@ NNFloat NNNetwork::Train(uint32_t epochs, NNFloat alpha, NNFloat lambda, NNFloat
         // Generate denoising randoms if denoising is active
         if (_bDenoising)
         {
-            for (auto l: _vInputLayer)
+            for (const auto& l: _vInputLayer)
             {
                 if (l->_bDenoising)
                     l->GenerateDenoisingData();
@@ -1560,12 +1560,12 @@ NNFloat NNNetwork::Train(uint32_t epochs, NNFloat alpha, NNFloat lambda, NNFloat
 
 void NNNetwork::ClearUpdates()
 {
-    for (auto w: _vWeight)
+    for (const auto& w: _vWeight)
     {
         w->_updateCount                     = 0;
     }
     
-    for (auto l: _vLayer)
+    for (const auto& l: _vLayer)
         l->ClearUpdates();
 }
 
@@ -1580,7 +1580,7 @@ tuple<NNFloat, NNFloat> NNNetwork::CalculateError(NNFloat lambda)
         batch                               = _examples - _position;
 
     // Calculate loss error
-    for (auto l: _vOutputLayer)
+    for (const auto& l: _vOutputLayer)
     {          
         error_training                     += l->CalculateError(_position, batch, _errorFunction);
     }
@@ -1588,7 +1588,7 @@ tuple<NNFloat, NNFloat> NNNetwork::CalculateError(NNFloat lambda)
     // Calculate regularization error
     if (lambda > (NNFloat)0.0)
     {
-        for (auto w: _vWeight)
+        for (const auto& w: _vWeight)
         {
             error_regularization           += w->CalculateRegularizationError(lambda);
         }
@@ -1615,7 +1615,7 @@ void NNNetwork::BackPropagate(NNFloat alpha)
     if (_position + batch > _examples)
         batch                               = _examples - _position;
 
-    for (auto l: _vBPOrder)
+    for (const auto& l: _vBPOrder)
     {
         switch (l->_kind)
         {
@@ -1685,7 +1685,7 @@ bool NNNetwork::SaveNetCDF(const string& fname)
     // Unshard weights and biases to local copy
     vector< vector<NNFloat> > vvWeight;
     vector< vector<NNFloat> > vvBias;
-    for (auto w : _vWeight)
+    for (const auto& w : _vWeight)
     {
         // Download weights to local copy on process 0
         vector<NNFloat> vWeight;
@@ -1846,7 +1846,7 @@ bool NNNetwork::SaveNetCDF(const string& fname)
 vector<string> NNNetwork::GetLayers()
 {
     vector<string> vResult;
-    for (auto l: _vLayer)
+    for (const auto& l: _vLayer)
         vResult.push_back(l->_name);
     return vResult;
 }
@@ -1911,7 +1911,7 @@ NNWeight* NNNetwork::GetWeight(const string& inputLayer, const string& outputLay
     }
 
     // Search for matching set of weights
-    for (auto p: _vWeight)
+    for (const auto& p: _vWeight)
         if ((&(p->_inputLayer) == pInputLayer) && (&(p->_outputLayer) == pOutputLayer))
             return p;
 
@@ -1941,7 +1941,7 @@ NNFloat* NNNetwork::GetWeightBuffer(const string& inputLayer, const string& outp
     }
 
     // Search for matching set of weights
-    for (auto p: _vWeight)
+    for (const auto& p: _vWeight)
         if ((&(p->_inputLayer) == pInputLayer) && (&(p->_outputLayer) == pOutputLayer))
             return p->_vWeight.data();
 
@@ -2009,7 +2009,7 @@ void CalculateConvolutionLayerDimensions(NNNetworkDescriptor& d)
             if (!mbDimensionsCalculated[pL])
             {
                 bool bAllInputsCalculated   = true;
-                for (auto s : pL->_vSource)
+                for (const auto& s : pL->_vSource)
                 {
                     NNLayerDescriptor* pS = mLayer[s];
                     bAllInputsCalculated  &= mbDimensionsCalculated[pS];
@@ -2032,7 +2032,7 @@ void CalculateConvolutionLayerDimensions(NNNetworkDescriptor& d)
                 uint32_t ny = 1;
                 uint32_t nz = 1;
                 uint32_t nw = 1;
-                for (auto s : pL->_vSource)
+                for (const auto& s : pL->_vSource)
                 {
                     NNLayerDescriptor* pS = mLayer[s];
                     //printf("L: %s S: %s %u %u %u %u\n", pL->_name.c_str(), pS->_name.c_str(), pS->_Nx, pS->_Ny, pS->_Nz, pS->_Nw);    
@@ -2150,7 +2150,7 @@ void NNNetwork::CalculatePropagationOrder()
     };
        
     // Initialize FP priorities
-    for (auto p : _vLayer)
+    for (const auto& p : _vLayer)
     {
         p->_priority            = (p->_kind == NNLayer::Kind::Input) ? 0 : -1;
     }
@@ -2158,7 +2158,7 @@ void NNNetwork::CalculatePropagationOrder()
     
     // Create FP queue
     priority_queue<NNLayer*, vector<NNLayer*>, CompareLayer> pqueue;
-    for (auto p : _vInputLayer)
+    for (const auto& p : _vInputLayer)
     {
         pqueue.push(p);
     }
@@ -2171,7 +2171,7 @@ void NNNetwork::CalculatePropagationOrder()
         pqueue.pop();
         
         int32_t priority       = pLayer->_priority + 1;
-        for (auto p : pLayer->_vOutgoingLayer)
+        for (const auto& p : pLayer->_vOutgoingLayer)
         {
             if (p->_priority < priority)
             {
@@ -2181,7 +2181,7 @@ void NNNetwork::CalculatePropagationOrder()
         }
 
         // Handle skip layers
-        for (auto p : pLayer->_vOutgoingSkip)
+        for (const auto& p : pLayer->_vOutgoingSkip)
         {
             if (p->_priority < priority)
             {
@@ -2193,7 +2193,7 @@ void NNNetwork::CalculatePropagationOrder()
 
     // Create forward propagation list
     _vFPOrder.resize(0);
-    for (auto p : _vLayer)
+    for (const auto& p : _vLayer)
     {
         _vFPOrder.push_back(p);
     }
@@ -2202,13 +2202,13 @@ void NNNetwork::CalculatePropagationOrder()
     //    cout << p->_name << endl;
     
     // Initialize BP priorities
-    for (auto p : _vLayer)
+    for (const auto& p : _vLayer)
     {
         p->_priority            = (p->_kind == NNLayer::Kind::Output) ? 0 : -1;
     }
     
     // Create BP queue
-    for (auto p : _vOutputLayer)
+    for (const auto& p : _vOutputLayer)
     {
         pqueue.push(p);
     }    
@@ -2219,7 +2219,7 @@ void NNNetwork::CalculatePropagationOrder()
         NNLayer* pLayer         = pqueue.top();
         pqueue.pop();
         int32_t priority       = pLayer->_priority + 1;
-        for (auto p : pLayer->_vIncomingLayer)
+        for (const auto& p : pLayer->_vIncomingLayer)
         {
             if (p->_priority < priority)
             {
@@ -2229,7 +2229,7 @@ void NNNetwork::CalculatePropagationOrder()
         } 
         
         // Handle skip layers
-        for (auto p : pLayer->_vIncomingSkip)
+        for (const auto& p : pLayer->_vIncomingSkip)
         {
             if (p->_priority < priority)
             {
@@ -2241,7 +2241,7 @@ void NNNetwork::CalculatePropagationOrder()
     
     // Create backpropagation list
     _vBPOrder.resize(0);
-    for (auto p : _vLayer)
+    for (const auto& p : _vLayer)
     {
         _vBPOrder.push_back(p);
     }
@@ -2469,7 +2469,7 @@ void NNNetwork::AllocatePeerBuffers()
     { 
         // Calculate maximum layer stride
         _maxStride                          = 0;
-        for (auto w : _vWeight)
+        for (const auto& w : _vWeight)
         {
             uint32_t stride                 = (w->_outputLayer._stride * 2) > (w->_inputLayer._stride * 2) ? w->_inputLayer._stride : w->_outputLayer._stride;
             if (stride > _maxStride)
@@ -3364,7 +3364,7 @@ NNNetwork* LoadNeuralNetworkJSON(const string& fname, const uint32_t batch, cons
                         if (bAutoSize)
                         {
                             bool bFound                     = false;
-                            for (auto p : vDataSet)
+                            for (const auto& p : vDataSet)
                             {
                                 if (p->_name.compare(ldl._dataSet) == 0)
                                 {
