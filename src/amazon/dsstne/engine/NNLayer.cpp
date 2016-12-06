@@ -1092,7 +1092,7 @@ void NNLayer::ForwardPropagatePooling(uint32_t position, uint32_t batch, bool bT
                     }
                     else
                     {
-                        cudaError_t status     = cudaMemcpy(_pbUnit->_pDevData, pLayer->_pbUnit->_pDevData, batch * _localStride * sizeof(NNFloat), cudaMemcpyDefault);
+                        cudaError_t status     = cudaMemcpyAsync(_pbUnit->_pDevData, pLayer->_pbUnit->_pDevData, batch * _localStride * sizeof(NNFloat), cudaMemcpyDefault);
                         RTERROR(status, "NNLayer::ForwardPropagate: Error calling cudaMemcpy for maxout pooling.");
                     }
                     break;
@@ -1368,7 +1368,7 @@ void NNLayer::BackPropagateConvolutional(uint32_t position, uint32_t batch, NNFl
             }
             else
             {
-                cudaMemcpy(l->_pbDelta->_pDevData, _pbDelta->_pDevData, batch * _localStride * sizeof(NNFloat), cudaMemcpyDefault);
+                cudaMemcpyAsync(l->_pbDelta->_pDevData, _pbDelta->_pDevData, batch * _localStride * sizeof(NNFloat), cudaMemcpyDefault);
             }
          
             l->_deltaUpdateCount++;
@@ -1449,7 +1449,7 @@ void NNLayer::BackPropagatePooling(uint32_t position, uint32_t batch, NNFloat al
             }
             else
             {
-                cudaMemcpy(l->_pbDelta->_pDevData, _pbDelta->_pDevData, batch * _localStride * sizeof(NNFloat), cudaMemcpyDefault);
+                cudaMemcpyAsync(l->_pbDelta->_pDevData, _pbDelta->_pDevData, batch * _localStride * sizeof(NNFloat), cudaMemcpyDefault);
             }
          
             l->_deltaUpdateCount++;
@@ -1615,7 +1615,7 @@ void NNLayer::BackPropagateFullyConnected(uint32_t position, uint32_t batch, NNF
             }
             else
             {
-                cudaMemcpy(l->_pbDelta->_pDevData, _pbDelta->_pDevData, batch * _localStride * sizeof(NNFloat), cudaMemcpyDefault);
+                cudaMemcpyAsync(l->_pbDelta->_pDevData, _pbDelta->_pDevData, batch * _localStride * sizeof(NNFloat), cudaMemcpyDefault);
             }
          
             l->_deltaUpdateCount++;
@@ -1788,7 +1788,7 @@ void NNLayer::BackPropagateFullyConnected(uint32_t position, uint32_t batch, NNF
             }
             else
             {
-                cudaMemcpy(l->_pbDelta->_pDevData, _pbDelta->_pDevData, batch * _localStride * sizeof(NNFloat), cudaMemcpyDefault);
+                cudaMemcpyAsync(l->_pbDelta->_pDevData, _pbDelta->_pDevData, batch * _localStride * sizeof(NNFloat), cudaMemcpyDefault);
             }
          
             l->_deltaUpdateCount++;
@@ -1967,12 +1967,12 @@ void NNLayer::Reduce(uint32_t batch, uint32_t stride, NNFloat* pBuffer, uint32_t
         {
             // Download to system memory and use MPI to perform reduction
             NNFloat* pCPUBuffer                     = getGpu()._pNetwork->GetP2PCPUBuffer();
-            cudaError_t status                      = cudaMemcpy(pCPUBuffer, pSendBuffer, batch * stride * sizeof(NNFloat), cudaMemcpyDefault);
+            cudaError_t status                      = cudaMemcpyAsync(pCPUBuffer, pSendBuffer, batch * stride * sizeof(NNFloat), cudaMemcpyDefault);
             RTERROR(status, "NNLayer::Reduce1: cudaMemcpy download failed " + getGpu()._id );
             MPI_Allreduce(MPI_IN_PLACE, pCPUBuffer, batch * stride, MPI_NNFLOAT, MPI_SUM, MPI_COMM_WORLD);
 
             // Upload back to GPU memory
-            status = cudaMemcpy(pSendBuffer, pCPUBuffer, batch * stride * sizeof(NNFloat), cudaMemcpyDefault);
+            status = cudaMemcpyAsync(pSendBuffer, pCPUBuffer, batch * stride * sizeof(NNFloat), cudaMemcpyDefault);
             RTERROR(status, "NNLayer::Reduce: cudaMemcpy upload failed" + getGpu()._id );
             minX                                    = (stride * getGpu()._id) / getGpu()._numprocs;
             maxX                                    = (stride * (getGpu()._id + 1)) / getGpu()._numprocs;
@@ -2056,7 +2056,7 @@ void NNLayer::Gather(uint32_t batch, uint32_t stride, NNFloat* pBuffer, uint32_t
             NNFloat* pCPUBuffer                        = getGpu()._pNetwork->GetP2PCPUBuffer();
 
             // Download local segment to system memory
-            cudaError_t status                         = cudaMemcpy2D(pCPUBuffer + minX, stride * sizeof(NNFloat), pBuffer, localStride * sizeof(NNFloat), localStride * sizeof(NNFloat), batch, cudaMemcpyDefault);
+            cudaError_t status                         = cudaMemcpy2DAsync(pCPUBuffer + minX, stride * sizeof(NNFloat), pBuffer, localStride * sizeof(NNFloat), localStride * sizeof(NNFloat), batch, cudaMemcpyDefault);
             RTERROR(status, "NNLayer::Gather: cudaMemcpy download failed");
 
 
@@ -2074,7 +2074,7 @@ void NNLayer::Gather(uint32_t batch, uint32_t stride, NNFloat* pBuffer, uint32_t
             }
  
             // Upload gathered buffer back to GPU memory
-            status                                     = cudaMemcpy(pSendBuffer, pCPUBuffer, batch * stride * sizeof(NNFloat), cudaMemcpyDefault);
+            status                                     = cudaMemcpyAsync(pSendBuffer, pCPUBuffer, batch * stride * sizeof(NNFloat), cudaMemcpyDefault);
             RTERROR(status, "NNLayer::Gather: cudaMemcpy upload failed");
         }
 #if 0
@@ -2104,14 +2104,14 @@ void NNLayer::Dump(string fname, NNFloat* pBuffer)
     vector<NNFloat> vData(_batch * _stride);
     if (getGpu()._numprocs == 1) 
     {
-        cudaMemcpy(vData.data(), pBuffer, _batch * _stride * sizeof(NNFloat), cudaMemcpyDefault);
+        cudaMemcpyAsync(vData.data(), pBuffer, _batch * _stride * sizeof(NNFloat), cudaMemcpyDefault);
     } 
     else 
     {
         if (getGpu()._id == 0)
         {
             NNFloat* pData              = vData.data();       
-            cudaMemcpy2D(pData, _stride * sizeof(NNFloat), pBuffer, _localStride * sizeof(NNFloat), _localStride * sizeof(NNFloat), _batch, cudaMemcpyDefault);
+            cudaMemcpy2DAsync(pData, _stride * sizeof(NNFloat), pBuffer, _localStride * sizeof(NNFloat), _localStride * sizeof(NNFloat), _batch, cudaMemcpyDefault);
             pData                      += _localStride;
             for (uint32_t i = 1; i < getGpu()._numprocs; i++)
             {                        
@@ -2136,7 +2136,7 @@ void NNLayer::Dump(string fname, NNFloat* pBuffer)
         {
             uint64_t size               = _batch * _localStride;
             vector<NNFloat> vLocalData(size);
-            cudaMemcpy(vLocalData.data(), pBuffer, size * sizeof(NNFloat), cudaMemcpyDefault);
+            cudaMemcpyAsync(vLocalData.data(), pBuffer, size * sizeof(NNFloat), cudaMemcpyDefault);
             MPI_Send(&size, 1, MPI_UINT64_T, 0, 0, MPI_COMM_WORLD);
             MPI_Send(vLocalData.data(), size, MPI_FLOAT, 0, 0, MPI_COMM_WORLD);                  
         }

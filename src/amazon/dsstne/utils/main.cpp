@@ -191,7 +191,7 @@ int main(int argc, char** argv)
             memset(pTarget, 0, STRIDE * batch * sizeof(NNFloat));            
             NNFloat* pOutputKey             = pNetwork->GetUnitBuffer("Output");
             NNFloat* pOut                   = pOutputValue;
-            cudaError_t status              = cudaMemcpy(pOut, pOutputKey, batch * STRIDE * sizeof(NNFloat), cudaMemcpyDeviceToHost);
+            cudaError_t status              = cudaMemcpyAsync(pOut, pOutputKey, batch * STRIDE * sizeof(NNFloat), cudaMemcpyDeviceToHost);
             RTERROR(status, "cudaMemcpy GpuBuffer::Download failed");
             
             for (int i = 0; i < batch; i++)

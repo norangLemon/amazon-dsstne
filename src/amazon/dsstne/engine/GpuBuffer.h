@@ -139,7 +139,7 @@ template <typename T>
 void GpuBuffer<T>::Copy(T* pBuff)
 {
     cudaError_t status;
-    status = cudaMemcpy(_pDevData, pBuff, _length * sizeof(T), cudaMemcpyDeviceToDevice);
+    status = cudaMemcpyAsync(_pDevData, pBuff, _length * sizeof(T), cudaMemcpyDeviceToDevice);
     RTERROR(status, "cudaMemcpy GpuBuffer::Upload failed");
 }
 
@@ -149,13 +149,13 @@ void GpuBuffer<T>::Upload(T* pBuff)
     if (pBuff)
     {
         cudaError_t status;
-        status = cudaMemcpy(_pDevData, pBuff, _length * sizeof(T), cudaMemcpyHostToDevice);
+        status = cudaMemcpyAsync(_pDevData, pBuff, _length * sizeof(T), cudaMemcpyHostToDevice);
         RTERROR(status, "cudaMemcpy GpuBuffer::Upload failed");
     }
     else if (_bSysMem)
     {
         cudaError_t status;
-        status = cudaMemcpy(_pDevData, _pSysData, _length * sizeof(T), cudaMemcpyHostToDevice);
+        status = cudaMemcpyAsync(_pDevData, _pSysData, _length * sizeof(T), cudaMemcpyHostToDevice);
         RTERROR(status, "cudaMemcpy GpuBuffer::Upload failed");
     }
 }
@@ -166,13 +166,13 @@ void GpuBuffer<T>::Download(T* pBuff)
     if (pBuff)
     {
         cudaError_t status;
-        status = cudaMemcpy(pBuff, _pDevData, _length * sizeof(T), cudaMemcpyDeviceToHost);
+        status = cudaMemcpyAsync(pBuff, _pDevData, _length * sizeof(T), cudaMemcpyDeviceToHost);
         RTERROR(status, "cudaMemcpy GpuBuffer::Download failed");
     }
     else if (_bSysMem)
     {
         cudaError_t status;
-        status = cudaMemcpy(_pSysData, _pDevData, _length * sizeof(T), cudaMemcpyDeviceToHost);
+        status = cudaMemcpyAsync(_pSysData, _pDevData, _length * sizeof(T), cudaMemcpyDeviceToHost);
         RTERROR(status, "cudaMemcpy GpuBuffer::Download failed");
     }
 }
