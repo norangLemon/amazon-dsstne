@@ -1710,7 +1710,7 @@ bool NNNetwork::SaveNetCDF(const string& fname)
                     NNFloat* pWeight            = vWeight.data();                    
                     if (outgoingSize > incomingSize)
                     {
-                        cudaMemcpy2D(pWeight, w->_outputLayer._stride * sizeof(NNFloat), w->_vWeight.data(), w->_outputLayer._localStride * sizeof(NNFloat), w->_outputLayer._localStride * sizeof(NNFloat), w->_inputLayer._stride, cudaMemcpyDefault);
+                        cudaMemcpy2DAsync(pWeight, w->_outputLayer._stride * sizeof(NNFloat), w->_vWeight.data(), w->_outputLayer._localStride * sizeof(NNFloat), w->_outputLayer._localStride * sizeof(NNFloat), w->_inputLayer._stride, cudaMemcpyDefault);
                         pWeight                += w->_outputLayer._localStride;
                         for (uint32_t i = 1; i < getGpu()._numprocs; i++)
                         {                        
@@ -1733,7 +1733,7 @@ bool NNNetwork::SaveNetCDF(const string& fname)
                     }
                     else
                     {
-                        cudaMemcpy(pWeight, w->_vWeight.data(), w->_outputLayer._stride * w->_inputLayer._localStride * sizeof(NNFloat), cudaMemcpyDefault);
+                        cudaMemcpyAsync(pWeight, w->_vWeight.data(), w->_outputLayer._stride * w->_inputLayer._localStride * sizeof(NNFloat), cudaMemcpyDefault);
                         pWeight                += w->_outputLayer._stride * w->_inputLayer._localStride;
                         for (uint32_t i = 1; i < getGpu()._numprocs; i++)
                         {
@@ -3798,7 +3798,7 @@ bool NNNetwork::P2P_Bcast(void* pBuffer, size_t size)
             {
                 if (getGpu()._id == 0) 
                 {
-                    status                                  = cudaMemcpy(GetPeerBackBuffer(), pBuffer, size, cudaMemcpyDefault);
+                    status                                  = cudaMemcpyAsync(GetPeerBackBuffer(), pBuffer, size, cudaMemcpyDefault);
                     RTERROR(status, "NNNetwork::P2P_Bcast: Failure to copy source data to P2P backbuffer");
                 }
                 cudaDeviceSynchronize();
@@ -3809,7 +3809,7 @@ bool NNNetwork::P2P_Bcast(void* pBuffer, size_t size)
                 // Copy source data to P2P send buffer if on process 0
                 if (getGpu()._id == 0)
                 {
-                    status                                  = cudaMemcpy(GetP2PSendBuffer(), pBuffer, size, cudaMemcpyDefault);
+                    status                                  = cudaMemcpyAsync(GetP2PSendBuffer(), pBuffer, size, cudaMemcpyDefault);
                     RTERROR(status, "NNNetwork::P2P_Bcast: Failure to copy source data to P2P backbuffer");
                 }     
             
@@ -3823,7 +3823,7 @@ bool NNNetwork::P2P_Bcast(void* pBuffer, size_t size)
                     {
                         size_t start                        = (size * segment) / getGpu()._numprocs;
                         size_t end                          = (size * (segment + 1)) / getGpu()._numprocs;
-                        status                              = cudaMemcpy(reinterpret_cast<char*>(GetPeerBackBuffer()) + start, reinterpret_cast<char*>(GetP2PSendBuffer()) + start, end - start, cudaMemcpyDefault);
+                        status                              = cudaMemcpyAsync(reinterpret_cast<char*>(GetPeerBackBuffer()) + start, reinterpret_cast<char*>(GetP2PSendBuffer()) + start, end - start, cudaMemcpyDefault);
                         RTERROR(status, "NNNetwork::P2P_Bcast: Failure to copy source data to P2P backbuffer");                    
                         segment++;
                     }
@@ -3837,15 +3837,15 @@ bool NNNetwork::P2P_Bcast(void* pBuffer, size_t size)
             // Grab Data from P2P receive buffer if on process 1 or higher
             if (getGpu()._id > 0)
             {
-                status                                      = cudaMemcpy(pBuffer, GetP2PSendBuffer(), size, cudaMemcpyDefault);
+                status                                      = cudaMemcpyAsync(pBuffer, GetP2PSendBuffer(), size, cudaMemcpyDefault);
                 RTERROR(status, "NNNetwork::P2P_Bcast: Failure to copy source data from P2P sendbuffer");            
             }
         }
         else
         {
-            cudaMemcpy(_pCPUBuffer.get(), pBuffer, size, cudaMemcpyDefault);
+            cudaMemcpyAsync(_pCPUBuffer.get(), pBuffer, size, cudaMemcpyDefault);
             MPI_Bcast(_pCPUBuffer.get(), size, MPI_BYTE, 0, MPI_COMM_WORLD);
-            cudaMemcpy(pBuffer, _pCPUBuffer.get(), size, cudaMemcpyDefault);
+            cudaMemcpyAsync(pBuffer, _pCPUBuffer.get(), size, cudaMemcpyDefault);
         }
     }
     
@@ -3862,7 +3862,7 @@ bool NNNetwork::P2P_Allreduce(NNFloat* pBuffer, size_t size)
             // Special case 2 GPUs
             if (getGpu()._numprocs == 2)   
             {
-                cudaMemcpy(GetPeerBuffer(), pBuffer, size * sizeof(NNFloat), cudaMemcpyDefault);
+                cudaMemcpyAsync(GetPeerBuffer(), pBuffer, size * sizeof(NNFloat), cudaMemcpyDefault);
                 cudaDeviceSynchronize();
                 MPI_Barrier(MPI_COMM_WORLD);
                 kAddBuffers(pBuffer, GetP2PReceiveBuffer(), size);
@@ -3879,9 +3879,9 @@ bool NNNetwork::P2P_Allreduce(NNFloat* pBuffer, size_t size)
                 {
                
                     if (i == 0)
-                        cudaMemcpy(GetPeerBuffer(), pBuffer + start, (end - start) * sizeof(NNFloat), cudaMemcpyDefault);
+                        cudaMemcpyAsync(GetPeerBuffer(), pBuffer + start, (end - start) * sizeof(NNFloat), cudaMemcpyDefault);
                     else
-                        cudaMemcpy(GetPeerBuffer(), GetP2PSendBuffer(), (end - start) * sizeof(NNFloat), cudaMemcpyDefault); 
+                        cudaMemcpyAsync(GetPeerBuffer(), GetP2PSendBuffer(), (end - start) * sizeof(NNFloat), cudaMemcpyDefault); 
                    
                     // Wait for completion
                     cudaDeviceSynchronize();              
@@ -3894,10 +3894,10 @@ bool NNNetwork::P2P_Allreduce(NNFloat* pBuffer, size_t size)
                 }
                  
                 // Circulate segments a second time and copy out results
-                cudaMemcpy(pBuffer + start, GetP2PSendBuffer(), (end - start) * sizeof(NNFloat), cudaMemcpyDefault);
+                cudaMemcpyAsync(pBuffer + start, GetP2PSendBuffer(), (end - start) * sizeof(NNFloat), cudaMemcpyDefault);
                 for (uint32_t i = 0; i < stages; i++)
                 {
-                    cudaMemcpy(GetPeerBuffer(), GetP2PSendBuffer(), (end - start) * sizeof(NNFloat), cudaMemcpyDefault);   
+                    cudaMemcpyAsync(GetPeerBuffer(), GetP2PSendBuffer(), (end - start) * sizeof(NNFloat), cudaMemcpyDefault);   
                    
                     // Wait for completion  
                     cudaDeviceSynchronize();              
@@ -3906,7 +3906,7 @@ bool NNNetwork::P2P_Allreduce(NNFloat* pBuffer, size_t size)
                     segment                             = (segment + 1) % getGpu()._numprocs;
                     start                               = (size * segment) / getGpu()._numprocs;
                     end                                 = (size * (segment + 1)) / getGpu()._numprocs;
-                    cudaMemcpy(pBuffer + start, GetP2PSendBuffer(), (end - start) * sizeof(NNFloat), cudaMemcpyDefault);               
+                    cudaMemcpyAsync(pBuffer + start, GetP2PSendBuffer(), (end - start) * sizeof(NNFloat), cudaMemcpyDefault);               
                 }
             }
         }
@@ -3916,9 +3916,9 @@ bool NNNetwork::P2P_Allreduce(NNFloat* pBuffer, size_t size)
             // but instead present for those who enjoy dancing bears.  This code will let you
             // run a bajillion GPUs over MPI, not very efficiently, but you could have
             // thousands of GPUs if you so desired.
-            cudaMemcpy(_pCPUBuffer.get(), pBuffer, size * sizeof(NNFloat), cudaMemcpyDefault);
+            cudaMemcpyAsync(_pCPUBuffer.get(), pBuffer, size * sizeof(NNFloat), cudaMemcpyDefault);
             MPI_Allreduce(MPI_IN_PLACE, _pCPUBuffer.get(), size, MPI_NNFLOAT, MPI_SUM, MPI_COMM_WORLD);
-            cudaMemcpy(pBuffer, _pCPUBuffer.get(), size * sizeof(NNFloat), cudaMemcpyDefault);
+            cudaMemcpyAsync(pBuffer, _pCPUBuffer.get(), size * sizeof(NNFloat), cudaMemcpyDefault);
         }
     }
     return true;

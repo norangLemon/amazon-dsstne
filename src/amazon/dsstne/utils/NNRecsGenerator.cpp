@@ -132,7 +132,7 @@ void NNRecsGenerator::generateRecs(NNNetwork *xNetwork,
             }
 
     }
-    cudaMemcpy(hOutputBuffer, dOutput, outputBufferSize* sizeof(NNFloat), cudaMemcpyDeviceToHost);
+    cudaMemcpyAsync(hOutputBuffer, dOutput, outputBufferSize* sizeof(NNFloat), cudaMemcpyDeviceToHost);
     // Iterate through all the filters and apply filters for each customer in the lBatch
 
 

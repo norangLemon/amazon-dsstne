@@ -656,7 +656,7 @@ void NNWeight::Dump(string fname, NNFloat* pBuffer)
     if (getGpu()._numprocs == 1)
     {
         vWeight.resize(_size);
-        cudaMemcpy(vWeight.data(), pBuffer, _size * sizeof(NNFloat), cudaMemcpyDefault);
+        cudaMemcpyAsync(vWeight.data(), pBuffer, _size * sizeof(NNFloat), cudaMemcpyDefault);
     }
     else
     {
@@ -665,7 +665,7 @@ void NNWeight::Dump(string fname, NNFloat* pBuffer)
             vWeight.resize(_outputLayer._stride * _inputLayer._stride);        
         uint32_t outgoingSize       = _outputLayer._stride * 3;               
         uint32_t incomingSize       = _inputLayer._stride * 2;     
-        cudaMemcpy(_vWeight.data(), pBuffer, _size * sizeof(NNFloat), cudaMemcpyDefault);
+        cudaMemcpyAsync(_vWeight.data(), pBuffer, _size * sizeof(NNFloat), cudaMemcpyDefault);
 
         // Reduce weight data into GPU 0
         if (getGpu()._id == 0)
@@ -673,7 +673,7 @@ void NNWeight::Dump(string fname, NNFloat* pBuffer)
             NNFloat* pWeight            = vWeight.data();                    
             if (outgoingSize > incomingSize)
             {
-                cudaMemcpy2D(pWeight, _outputLayer._stride * sizeof(NNFloat), _vWeight.data(), _outputLayer._localStride * sizeof(NNFloat), _outputLayer._localStride * sizeof(NNFloat), _inputLayer._stride, cudaMemcpyDefault);
+                cudaMemcpy2DAsync(pWeight, _outputLayer._stride * sizeof(NNFloat), _vWeight.data(), _outputLayer._localStride * sizeof(NNFloat), _outputLayer._localStride * sizeof(NNFloat), _inputLayer._stride, cudaMemcpyDefault);
                 pWeight                += _outputLayer._localStride;
                 for (uint32_t i = 1; i < getGpu()._numprocs; i++)
                 {                        
@@ -696,7 +696,7 @@ void NNWeight::Dump(string fname, NNFloat* pBuffer)
             }
             else
             {
-                cudaMemcpy(pWeight, _vWeight.data(), _outputLayer._stride * _inputLayer._localStride * sizeof(NNFloat), cudaMemcpyDefault);
+                cudaMemcpyAsync(pWeight, _vWeight.data(), _outputLayer._stride * _inputLayer._localStride * sizeof(NNFloat), cudaMemcpyDefault);
                 pWeight                += _outputLayer._stride * _inputLayer._localStride;
                 for (uint32_t i = 1; i < getGpu()._numprocs; i++)
                 {
