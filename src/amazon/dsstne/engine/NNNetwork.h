@@ -12,6 +12,15 @@
 #define NNNETWORK_H
 #ifndef __NVCC__
 
+#include <map>
+#include <vector>
+
+#include "GpuTypes.h"
+#include "NNTypes.h"
+
+using std::vector;
+
+class NNDataSetBase;
 struct NNLayerDescriptor;
 struct NNNetworkDescriptor;
 struct NNWeightDescriptor;
@@ -208,38 +217,6 @@ private:
 ostream& operator<< (ostream& out, NNNetwork::Kind& k);
 
 
-struct NNNetworkDescriptor
-{
-    string                      _name;                      // Optional name for neural network
-    NNNetwork::Kind             _kind;                      // Either AutoEncoder or FeedForward (default)
-    ErrorFunction               _errorFunction;             // Error function for training
-    vector<NNLayerDescriptor>   _vLayerDescriptor;          // Vector containing neural network layers
-    vector<NNWeightDescriptor>  _vWeightDescriptor;         // Vector containing preloaded weight data
-    bool                        _bShuffleIndices;           // Flag to signal whether to shuffle training data or not
-    uint32_t                    _maxout_k;                  // Size of Maxout (default 2)
-    NNFloat                     _LRN_k;                     // Local Response Normalization offset (default 2)
-    uint32_t                    _LRN_n;                     // Local Response Normalization spread (default 5)
-    NNFloat                     _LRN_alpha;                 // Local Response Normalization scaling (default 0.0001)
-    NNFloat                     _LRN_beta;                  // Local Response Normalization exponent (default 0.75)
-    bool                        _bSparsenessPenalty;        // Specifies whether to use sparseness penalty on hidden layers or not
-    NNFloat                     _sparsenessPenalty_p;       // Target sparseness probability for hidden layers
-    NNFloat                     _sparsenessPenalty_beta;    // Sparseness penalty weight 
-    bool                        _bDenoising;                // Specifies whether to use denoising on input layers
-    NNFloat                     _denoising_p;               // Probability of denoising inputs (for sparse layers, only denoise on non-zero values) 
-    NNFloat                     _deltaBoost_one;            // Adjusts scaling of nonzero-valued outputs
-    NNFloat                     _deltaBoost_zero;           // Adjusts scaling of zero-valued outputs
-    NNFloat                     _SMCE_oneTarget;            // Relaxed target for non-zero target values (Default 0.9)
-    NNFloat                     _SMCE_zeroTarget;           // Relaxed target for zero target values (Default 0.1)
-    NNFloat                     _SMCE_oneScale;             // Scaling factor for non-zero target values (Default 1.0)
-    NNFloat                     _SMCE_zeroScale;            // Scaling factor for zero target values (Default 1.0)
-    string                      _checkpoint_name;           // Checkpoint file name
-    int32_t                     _checkpoint_interval;       // Number of epochs between checkpoints
-    int32_t                     _checkpoint_epochs;         // Number of epochs since last checkpoint
-    bool                        _bConvLayersCalculated;     // Have convolution layer dimensions been calculated?
-    NNNetworkDescriptor();
-};
-
-ostream& operator<< (ostream& out, NNNetworkDescriptor& d);
 NNNetwork* LoadNeuralNetworkNetCDF(const string& fname, const uint32_t batch = DefaultBatch);
 NNNetwork* LoadNeuralNetworkJSON(const string &fname, const uint32_t batch = DefaultBatch, const vector<NNDataSetBase*>& vDataSet = vector<NNDataSetBase*>());
 bool SaveNeuralNetworkJSON(const NNNetwork& net, const string& fname);
