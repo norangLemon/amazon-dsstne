@@ -12,6 +12,9 @@
 
 #ifndef __GPUSORT_H__
 #define __GPUSORT_H__
+
+#include "GpuBuffer.h"
+
 template<typename KeyType, typename ValueType> class GpuSort
 {
 private:
