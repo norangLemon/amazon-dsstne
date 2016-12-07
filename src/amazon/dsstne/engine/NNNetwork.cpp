@@ -12,6 +12,7 @@
 
 #include "GpuTypes.h"
 #include "NNTypes.h"
+#include "NNWeightDescriptor.h"
 #include "kernels.h"
 #include "Utils.h"
 #define __STDC_FORMAT_MACROS

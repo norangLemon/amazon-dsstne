@@ -6,7 +6,7 @@ VPATH=
 
 include ../Makefile.inc
 
-OBJS=   NNTypes.o NNWeight.o NNLayer.o NNNetwork.o GpuTypes.o kernels.o kLoss.o kActivation.o kDelta.o  
+OBJS=   NNTypes.o NNWeight.o NNWeightDescriptor.o NNLayer.o NNNetwork.o GpuTypes.o kernels.o kLoss.o kActivation.o kDelta.o
 
 COMMON_LIBS = $(MATH_LIBS) $(MPI_LIBS) $(CU_LIBS) $(CU_LOADLIBS)
 all: ../lib/libdsstne.a

@@ -87,29 +87,4 @@ public:
     bool SetNorm(NNFloat norm);
 };
 
-
-struct NNWeightDescriptor
-{
-    string                  _inputLayer;
-    string                  _outputLayer;
-    uint64_t                _width;
-    uint64_t                _height;
-    uint64_t                _length;
-    uint64_t                _depth;
-    uint64_t                _breadth;
-    vector<NNFloat>         _vWeight;
-    vector<NNFloat>         _vBias;
-    bool                    _bShared;
-    bool                    _bTransposed;
-    bool                    _bLocked;
-    NNFloat                 _norm;
-    string                  _sourceInputLayer;     // _sourceInputLayer and _sourceOutputLayer collectively
-    string                  _sourceOutputLayer;    // specify which weight matrix will be shared here
-
-    NNWeightDescriptor();
-};
-
-bool LoadNNWeightDescriptorNetCDF(const string& fname, netCDF::NcFile& nc, uint32_t index, NNWeightDescriptor& wd);
-ostream& operator<< (ostream& out, NNWeightDescriptor& d);
-uint32_t MPI_Bcast_NNWeightDescriptor(NNWeightDescriptor& d);
 #endif

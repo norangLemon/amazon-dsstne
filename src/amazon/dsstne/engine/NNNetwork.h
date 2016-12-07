@@ -11,8 +11,9 @@
 #ifndef NNNETWORK_H
 #define NNNETWORK_H
 #ifndef __NVCC__
-struct NNNetworkDescriptor;
 
+struct NNNetworkDescriptor;
+struct NNWeightDescriptor;
 
 class NNNetwork {
 public:
