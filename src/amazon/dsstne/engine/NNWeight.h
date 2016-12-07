@@ -12,26 +12,35 @@
 
 #ifndef NNWEIGHT_H
 #define NNWEIGHT_H
+#ifndef __NVCC__
 
 #include <map>
+#include <memory>
 #include <netcdf>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "GpuTypes.h"
+#include "NNNetwork.h"
 #include "NNTypes.h"
 
 class NNLayer;
-class NNNetwork;
 
 using std::string;
 using std::vector;
 
-#include <memory>
+
+struct NNNetworkDescriptor;
 
 class NNWeight {
 public:
+    friend class NNLayer;
+    friend NNNetwork::NNNetwork(NNNetworkDescriptor& nd, uint32_t batch);
+    friend NNNetwork* LoadNeuralNetworkNetCDF(const string& fname, uint32_t batch);
+    friend bool NNNetwork::SaveNetCDF(const string& fname);
+    friend void NNNetwork::SaveWeights(const string& fname, const string& inputLayer, const string& outputLayer);
+
     enum Transform
     {
         Convolution,
@@ -41,9 +50,6 @@ public:
     static std::map<NNWeight::Transform, string> _sTransformMap;
 
 private:
-    friend class NNNetwork;
-    friend class NNLayer;
-    friend NNNetwork* LoadNeuralNetworkNetCDF(const string& fname, uint32_t batch);
 
     NNLayer&                        _inputLayer;                // Source of activations
     NNLayer&                        _outputLayer;               // Output destination/Delta sources
@@ -84,24 +90,45 @@ private:
     unique_ptr<GpuBuffer<NNFloat>> _pbWeightGradientVelocity;  // Gradient velocity used for AdaDelta and Adam
     unique_ptr<GpuBuffer<NNFloat>> _pbBiasGradientVelocity;    // Gradient velocity used for AdaDelta and Adam
     NNWeight(NNLayer& inputLayer, NNLayer& outputLayer, bool bShared = false, bool bTransposed = false, bool bLocked = false, NNFloat maxNorm = 0.0f);
-    ~NNWeight();
     void ClearSharedGradient();
     void ClearGradient();
-    NNFloat CalculateRegularizationError(NNFloat lambda);
-    void ClearVelocity();
-    void Randomize();
-    void Lock();
-    void Unlock();
     void Dump(string fname, NNFloat* pBuffer);
-    void RefreshState(NNNetwork* pNetwork, TrainingMode trainingMode);
-    void UpdateWeights(TrainingMode trainingMode, uint32_t batch, NNFloat alpha, NNFloat lambda, NNFloat mu);
     bool WriteNetCDF(netCDF::NcFile& nc, uint32_t index, NNFloat* pWeight = NULL, NNFloat* pBias = NULL);
     NNFloat* GetWeightBuffer();
     NNFloat* GetWeightGradientBuffer();
     uint64_t GetBufferSize();
 public:
+    ~NNWeight();
+
     bool CopyWeights(NNWeight* pWeight);
     bool SetNorm(NNFloat norm);
+    void ClearVelocity();
+    void ClearUpdates();
+    void UpdateWeights(TrainingMode trainingMode, uint32_t batch, NNFloat alpha, NNFloat lambda, NNFloat mu);
+    NNFloat CalculateRegularizationError(NNFloat lambda);
+    void RefreshState(NNNetwork* pNetwork, TrainingMode trainingMode);
+    void Lock();
+    void Unlock();
+    void Randomize();
+
+    const NNLayer& InputLayer();
+    const NNLayer& OutputLayer();
+
+    void UploadBias();
+    void UploadWeight();
+    void DownloadBias();
+    void DownloadWeight();
+    GpuBuffer<NNFloat>* GPUBias();
+    GpuBuffer<NNFloat>* GPUWeight();
+    vector<NNFloat>& CPUBias();
+    vector<NNFloat>& CPUWeight();
+
+    GpuBuffer<NNFloat>* WeightGradient();
+
+    uint32_t SharingCount() const;
+    void IncreaseSharingCount();
+    void ShareWeight(NNWeight* weight);
 };
 
+#endif // __NVCC__
 #endif
