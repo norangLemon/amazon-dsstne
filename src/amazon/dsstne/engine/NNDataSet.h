@@ -16,7 +16,7 @@
 #include <netcdf>
 #include <vector>
 
-#include "NNTypes.h"
+#include "NNDataSetBase.h"
 
 using std::vector;
 using namespace netCDF;

@@ -6,7 +6,8 @@ VPATH=
 
 include ../Makefile.inc
 
-OBJS=   NNTypes.o NNWeight.o NNWeightDescriptor.o NNLayer.o NNLayerDescriptor.o NNNetwork.o NNNetworkDescriptor.o \
+OBJS=   NNDataSetBase.o NNTypes.o \
+		NNWeight.o NNWeightDescriptor.o NNLayer.o NNLayerDescriptor.o NNNetwork.o NNNetworkDescriptor.o \
 		GpuTypes.o kernels.o kLoss.o kActivation.o kDelta.o
 
 COMMON_LIBS = $(MATH_LIBS) $(MPI_LIBS) $(CU_LIBS) $(CU_LOADLIBS)
