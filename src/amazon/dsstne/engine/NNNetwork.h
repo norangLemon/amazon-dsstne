@@ -12,6 +12,7 @@
 #define NNNETWORK_H
 #ifndef __NVCC__
 
+struct NNLayerDescriptor;
 struct NNNetworkDescriptor;
 struct NNWeightDescriptor;
 

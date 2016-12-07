@@ -11,6 +11,7 @@
  */
 
 #include "GpuTypes.h"
+#include "NNLayerDescriptor.h"
 #include "NNTypes.h"
 #include "NNWeightDescriptor.h"
 #include "kernels.h"
