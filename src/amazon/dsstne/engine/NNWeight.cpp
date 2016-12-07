@@ -235,13 +235,13 @@ void NNWeight::Randomize()
     if (!_bShared)
     {
         NNFloat scale, bias;        
-        switch (_outputLayer._weightInit)
+        switch (_outputLayer.WeightInit())
         {
         case CaffeXavier:
             // Initialize weights to range from _weightInitScale * (-sqrt(3 / n_output) to sqrt(3 / n_output))
             // ala the adaptation of Gloriot and Bengio in Caffe
             curandGenerateUniform(getGpu()._RNG, _pbWeight->_pDevData, _size);
-            scale               = _outputLayer._weightInitScale * 2.0f * sqrtf(3.0f / _outputLayer._stride);
+            scale               = _outputLayer.WeightInitScale() * 2.0f * sqrtf(3.0f / _outputLayer.Stride());
             bias                = 0.5f * scale;                 
             kScaleAndBias(_pbWeight->_pDevData, _size, scale, bias);
             break;
@@ -250,7 +250,7 @@ void NNWeight::Randomize()
             // Initialize weights to range from _weightInitScale * (-sqrt(6 / (n_output+n_input)) and sqrt(6 / (n_output+n_input)))
             // ala Gloriot and Bengio
             curandGenerateUniform(getGpu()._RNG, _pbWeight->_pDevData, _size);
-            scale               = _outputLayer._weightInitScale * sqrtf(6.0f / (_outputLayer._stride + _inputLayer._stride));
+            scale               = _outputLayer.WeightInitScale() * sqrtf(6.0f / (_outputLayer.Stride() + _inputLayer.Stride()));
             bias                = 0.5f * scale;
             kScaleAndBias(_pbWeight->_pDevData, _size, scale, bias);
             break;
@@ -258,34 +258,34 @@ void NNWeight::Randomize()
         case Uniform:
             // Initialize weights uniformly from -_weightInitScale to +_weightInitScale
             curandGenerateUniform(getGpu()._RNG, _pbWeight->_pDevData, _size);
-            scale               = 2.0f * _outputLayer._weightInitScale;
+            scale               = 2.0f * _outputLayer.WeightInitScale();
             bias                = 0.5f * scale;                 
             kScaleAndBias(_pbWeight->_pDevData, _size, scale, bias);  
             break;
             
         case Gaussian:
             // Initialize weights to N(0, _weightInitScale)
-            curandGenerateNormal(getGpu()._RNG, _pbWeight->_pDevData, _size, 0.0f, _outputLayer._weightInitScale);
+            curandGenerateNormal(getGpu()._RNG, _pbWeight->_pDevData, _size, 0.0f, _outputLayer.WeightInitScale());
             break;        
             
         case UnitBall:      
             // Initialize weights uniformly from 0 to _weightInitScale  
             curandGenerateUniform(getGpu()._RNG, _pbWeight->_pDevData, _size);
-            scale               = _outputLayer._weightInitScale;              
+            scale               = _outputLayer.WeightInitScale();
             kScaleAndBias(_pbWeight->_pDevData, _size, scale, 0.0f);     
             break;
           
         case Constant:
             // Initialize all weights to _weightInitScale
             cudaMemset(_pbWeight->_pDevData, 0, _size * sizeof(NNFloat));
-            kScaleAndBias(_pbWeight->_pDevData, _size, (NNFloat)0.0, _outputLayer._weightInitScale); 
+            kScaleAndBias(_pbWeight->_pDevData, _size, (NNFloat)0.0, _outputLayer.WeightInitScale());
             break;
         };
     }
         
     // Initialize Biases
     cudaMemset(_pbBias->_pDevData, 0, _biasSize * sizeof(NNFloat));
-    kScaleAndBias(_pbBias->_pDevData, _biasSize, (NNFloat)0.0, -_outputLayer._biasInit); 
+    kScaleAndBias(_pbBias->_pDevData, _biasSize, (NNFloat)0.0, -_outputLayer.BiasInit());
 }
 
 void NNWeight::Lock()
@@ -330,33 +330,33 @@ void NNWeight::RefreshState(NNNetwork* pNetwork, TrainingMode mode)
     }
     
     // If convolution layer, recalculate Convolution settings
-    if (_outputLayer._type == NNLayer::Type::Convolutional)
+    if (_outputLayer.LayerType() == NNLayer::Type::Convolutional)
     {
-        printf("Getting algorithm between %s and %s\n", _inputLayer._name.c_str(), _outputLayer._name.c_str());
+        printf("Getting algorithm between %s and %s\n", _inputLayer.Name().c_str(), _outputLayer.Name().c_str());
         size_t workspaceSize;
         cudnnStatus_t cudnnStatus           = cudnnGetConvolutionForwardAlgorithm(getGpu()._cuDNNHandle,
-                                              _inputLayer._tensorDescriptor,
+                                              _inputLayer.TensorDescriptor(),
                                               _convFilterDesc,
                                               _convDesc,
-                                              _outputLayer._tensorDescriptor,
+                                              _outputLayer.TensorDescriptor(),
                                               CUDNN_CONVOLUTION_FWD_PREFER_FASTEST,
                                               1,
                                               &_convFWAlgo);
         CUDNNERROR(cudnnStatus, "NNWeight::Refresh: cudnnGetConvolutionForwardAlgorithm failed.");                                              
         
         cudnnStatus                         = cudnnGetConvolutionForwardWorkspaceSize(getGpu()._cuDNNHandle,
-                                              _inputLayer._tensorDescriptor,
+                                              _inputLayer.TensorDescriptor(),
                                               _convFilterDesc,
                                               _convDesc,
-                                              _outputLayer._tensorDescriptor,
+                                              _outputLayer.TensorDescriptor(),
                                               _convFWAlgo,
                                               &workspaceSize); 
         CUDNNERROR(cudnnStatus, "NNWeight::Refresh: cudnnGetConvolutionForwardWorkspaceSize failed.");
         pNetwork->SetCUDNNWorkspace(workspaceSize);
          
         cudnnStatus                         = cudnnGetConvolutionBackwardFilterAlgorithm(getGpu()._cuDNNHandle,
-                                             _inputLayer._tensorDescriptor,
-                                             _outputLayer._tensorDescriptor,
+                                             _inputLayer.TensorDescriptor(),
+                                             _outputLayer.TensorDescriptor(),
                                              _convDesc,
                                              _convFilterDesc,
                                              CUDNN_CONVOLUTION_BWD_FILTER_PREFER_FASTEST,
@@ -368,8 +368,8 @@ void NNWeight::RefreshState(NNNetwork* pNetwork, TrainingMode mode)
         //_convBWWeightAlgo                   = CUDNN_CONVOLUTION_BWD_FILTER_ALGO_1;
 
         cudnnStatus                         = cudnnGetConvolutionBackwardFilterWorkspaceSize(getGpu()._cuDNNHandle,
-                                            _inputLayer._tensorDescriptor,
-                                            _outputLayer._tensorDescriptor,
+                                            _inputLayer.TensorDescriptor(),
+                                            _outputLayer.TensorDescriptor(),
                                             _convDesc,
                                             _convFilterDesc,
                                             _convBWWeightAlgo,
@@ -379,9 +379,9 @@ void NNWeight::RefreshState(NNNetwork* pNetwork, TrainingMode mode)
                 
         cudnnStatus                         = cudnnGetConvolutionBackwardDataAlgorithm(getGpu()._cuDNNHandle,
                                             _convFilterDesc,
-                                            _outputLayer._tensorDescriptor,
+                                            _outputLayer.TensorDescriptor(),
                                             _convDesc,
-                                            _inputLayer._tensorDescriptor,
+                                            _inputLayer.TensorDescriptor(),
                                             CUDNN_CONVOLUTION_BWD_DATA_PREFER_FASTEST,
                                             0,
                                             &_convBWDeltaAlgo);
@@ -391,9 +391,9 @@ void NNWeight::RefreshState(NNNetwork* pNetwork, TrainingMode mode)
                                         
         cudnnStatus                         = cudnnGetConvolutionBackwardDataWorkspaceSize(getGpu()._cuDNNHandle,
                                               _convFilterDesc,
-                                              _outputLayer._tensorDescriptor,
+                                              _outputLayer.TensorDescriptor(),
                                               _convDesc,
-                                              _inputLayer._tensorDescriptor,
+                                              _inputLayer.TensorDescriptor(),
                                               _convBWDeltaAlgo,
                                               &workspaceSize);
         CUDNNERROR(cudnnStatus, "NNWeight::Refresh: cudnnGetConvolutionBackwardDataWorkspaceSize failed.");
@@ -402,18 +402,18 @@ void NNWeight::RefreshState(NNNetwork* pNetwork, TrainingMode mode)
         // Validate output layer size
         vector<int> vOutputDim(8, 1);
         cudnnStatus                         = cudnnGetConvolutionNdForwardOutputDim(_convDesc,
-                                                                                    _inputLayer._tensorDescriptor,
+                                                                                    _inputLayer.TensorDescriptor(),
                                                                                     _convFilterDesc,
-                                                                                    _outputLayer._dimensions + 1,
+                                                                                    _outputLayer.Dimensions() + 1,
                                                                                     vOutputDim.data());
         CUDNNERROR(cudnnStatus, "NNWeight::Refresh: cudnnGetConvolutionNdForwardOutputDim failed.");                                                                                    
         size_t dim = 1;
-        for (size_t i = 0; i < _outputLayer._dimensions + 1; i++)
+        for (size_t i = 0; i < _outputLayer.Dimensions() + 1; i++)
             dim *= vOutputDim[i];
-        if (dim != _outputLayer._maxLocalStride * _outputLayer._localBatch)
+        if (dim != _outputLayer.MaxLocalStride() * _outputLayer.LocalBatch())
         {
             if (getGpu()._id == 0)
-                printf("Output layer %s has incorrectly calculated dimensions for cuDNN.\n", _outputLayer._name.c_str());
+                printf("Output layer %s has incorrectly calculated dimensions for cuDNN.\n", _outputLayer.Name().c_str());
             getGpu().Shutdown();
         }
     }
@@ -475,27 +475,27 @@ void NNWeight::UpdateWeights(TrainingMode trainingMode, uint32_t batch, NNFloat 
         switch (trainingMode)
         {
             case SGD:
-                kSGDUpdateBiases(alpha, batch, _biasSize, _outputLayer._pbDelta->_pDevData, _pbBias->_pDevData);
+                kSGDUpdateBiases(alpha, batch, _biasSize, _outputLayer.GetDeltaBuffer(), _pbBias->_pDevData);
                 break;
 
             case Momentum:
-                kMomentumUpdateBiases(alpha, mu, batch, _biasSize, _outputLayer._pbDelta->_pDevData, _pbBiasVelocity->_pDevData, _pbBias->_pDevData);
+                kMomentumUpdateBiases(alpha, mu, batch, _biasSize, _outputLayer.GetDeltaBuffer(), _pbBiasVelocity->_pDevData, _pbBias->_pDevData);
                 break;
                     
             case AdaGrad:
-                kAdaGradUpdateBiases(alpha, batch, _outputLayer._localStride, _outputLayer._pbDelta->_pDevData, _pbBiasVelocity->_pDevData, _pbBias->_pDevData);
+                kAdaGradUpdateBiases(alpha, batch, _outputLayer.LocalStride(), _outputLayer.GetDeltaBuffer(), _pbBiasVelocity->_pDevData, _pbBias->_pDevData);
                 break;
                     
             case Nesterov:
-                kNesterovUpdateBiases(alpha, mu, batch, _outputLayer._localStride, _outputLayer._pbDelta->_pDevData, _pbBiasVelocity->_pDevData, _pbBias->_pDevData);
+                kNesterovUpdateBiases(alpha, mu, batch, _outputLayer.LocalStride(), _outputLayer.GetDeltaBuffer(), _pbBiasVelocity->_pDevData, _pbBias->_pDevData);
                 break;
                     
             case RMSProp:
-                kRMSPropUpdateBiases(alpha, mu, batch, _outputLayer._localStride, _outputLayer._pbDelta->_pDevData, _pbBiasVelocity->_pDevData, _pbBias->_pDevData);
+                kRMSPropUpdateBiases(alpha, mu, batch, _outputLayer.LocalStride(), _outputLayer.GetDeltaBuffer(), _pbBiasVelocity->_pDevData, _pbBias->_pDevData);
                 break;
                 
             case AdaDelta:
-                kAdaDeltaUpdateBiases(mu, batch, _outputLayer._localStride, _outputLayer._pbDelta->_pDevData, _pbBiasVelocity->_pDevData, _pbBiasGradientVelocity->_pDevData, _pbBias->_pDevData);
+                kAdaDeltaUpdateBiases(mu, batch, _outputLayer.LocalStride(), _outputLayer.GetDeltaBuffer(), _pbBiasVelocity->_pDevData, _pbBiasGradientVelocity->_pDevData, _pbBias->_pDevData);
                 break;                         
         }
     }
@@ -542,13 +542,13 @@ void NNWeight::UpdateWeights(TrainingMode trainingMode, uint32_t batch, NNFloat 
     if ((_norm > (NNFloat)0.0) && (!_bShared))
     {
         if (getGpu()._numprocs == 1)  // TODO Detect data-parallel here
-            kNormalizeWeights(_norm, _outputLayer._stride, _inputLayer._localStride, _pbWeight->_pDevData);
+            kNormalizeWeights(_norm, _outputLayer.Stride(), _inputLayer.LocalStride(), _pbWeight->_pDevData);
         else
         {
-            NNFloat* pMagnitude                 = getGpu()._pNetwork->GetScratchBuffer(_outputLayer._stride);
-            kCalculateWeightMagnitudes(_outputLayer._stride, _inputLayer._localStride, _pbWeight->_pDevData, pMagnitude);
-            getGpu()._pNetwork->P2P_Allreduce(pMagnitude, _outputLayer._stride);
-            kNormalizeWeightMagnitudes(_norm, _outputLayer._stride, _inputLayer._localStride, _pbWeight->_pDevData, pMagnitude);       
+            NNFloat* pMagnitude                 = getGpu()._pNetwork->GetScratchBuffer(_outputLayer.Stride());
+            kCalculateWeightMagnitudes(_outputLayer.Stride(), _inputLayer.LocalStride(), _pbWeight->_pDevData, pMagnitude);
+            getGpu()._pNetwork->P2P_Allreduce(pMagnitude, _outputLayer.Stride());
+            kNormalizeWeightMagnitudes(_norm, _outputLayer.Stride(), _inputLayer.LocalStride(), _pbWeight->_pDevData, pMagnitude);
         }
     }
 }
@@ -559,8 +559,8 @@ bool NNWeight::WriteNetCDF(netCDF::NcFile& nc, uint32_t index, NNFloat* pWeight,
     if (getGpu()._id == 0)
     {
         string wstring          = "weight" + std::to_string(index) + "_";
-        nc.putAtt(wstring + "inputLayer", _inputLayer._name);
-        nc.putAtt(wstring + "outputLayer", _outputLayer._name);
+        nc.putAtt(wstring + "inputLayer", _inputLayer.Name());
+        nc.putAtt(wstring + "outputLayer", _outputLayer.Name());
 
         nc.putAtt(wstring + "width", ncUint64, (unsigned long long int)_width);  
         nc.putAtt(wstring + "height", ncUint64, (unsigned long long int)_height);
@@ -580,8 +580,8 @@ bool NNWeight::WriteNetCDF(netCDF::NcFile& nc, uint32_t index, NNFloat* pWeight,
         if (_bShared)
         {
             nc.putAtt(wstring + "bTransposed", ncUint, (uint32_t)_bTransposed);
-            nc.putAtt(wstring + "sourceInputLayer", _pSharedWeight->_inputLayer._name);
-            nc.putAtt(wstring + "sourceOutputLayer", _pSharedWeight->_outputLayer._name);
+            nc.putAtt(wstring + "sourceInputLayer", _pSharedWeight->_inputLayer.Name());
+            nc.putAtt(wstring + "sourceOutputLayer", _pSharedWeight->_outputLayer.Name());
         }
         else
         {
@@ -662,9 +662,9 @@ void NNWeight::Dump(string fname, NNFloat* pBuffer)
     {
         // Cannibalize system weight vector to hold buffer data
         if (getGpu()._id == 0)
-            vWeight.resize(_outputLayer._stride * _inputLayer._stride);        
-        uint32_t outgoingSize       = _outputLayer._stride * 3;               
-        uint32_t incomingSize       = _inputLayer._stride * 2;     
+            vWeight.resize(_outputLayer.Stride() * _inputLayer.Stride());
+        uint32_t outgoingSize       = _outputLayer.Stride() * 3;
+        uint32_t incomingSize       = _inputLayer.Stride() * 2;
         cudaMemcpyAsync(_vWeight.data(), pBuffer, _size * sizeof(NNFloat), cudaMemcpyDefault);
 
         // Reduce weight data into GPU 0
@@ -673,8 +673,8 @@ void NNWeight::Dump(string fname, NNFloat* pBuffer)
             NNFloat* pWeight            = vWeight.data();                    
             if (outgoingSize > incomingSize)
             {
-                cudaMemcpy2DAsync(pWeight, _outputLayer._stride * sizeof(NNFloat), _vWeight.data(), _outputLayer._localStride * sizeof(NNFloat), _outputLayer._localStride * sizeof(NNFloat), _inputLayer._stride, cudaMemcpyDefault);
-                pWeight                += _outputLayer._localStride;
+                cudaMemcpy2DAsync(pWeight, _outputLayer.Stride() * sizeof(NNFloat), _vWeight.data(), _outputLayer.LocalStride() * sizeof(NNFloat), _outputLayer.LocalStride() * sizeof(NNFloat), _inputLayer.Stride(), cudaMemcpyDefault);
+                pWeight                += _outputLayer.LocalStride();
                 for (uint32_t i = 1; i < getGpu()._numprocs; i++)
                 {                        
                     uint64_t size;
@@ -682,22 +682,22 @@ void NNWeight::Dump(string fname, NNFloat* pBuffer)
                     MPI_Recv(&size, 1, MPI_UINT64_T, i, 0, MPI_COMM_WORLD, &status);
                     vector<NNFloat> vTemp(size);
                     MPI_Recv(vTemp.data(), size, MPI_FLOAT, i, 0, MPI_COMM_WORLD, &status);
-                    uint64_t lstride    = size / _inputLayer._stride;
+                    uint64_t lstride    = size / _inputLayer.Stride();
                     NNFloat* pSrcWeight = vTemp.data();
                     NNFloat* pDstWeight = pWeight;
-                    for (uint32_t j = 0; j < _inputLayer._stride; j++)
+                    for (uint32_t j = 0; j < _inputLayer.Stride(); j++)
                     {
                         memcpy(pDstWeight, pSrcWeight, lstride * sizeof(NNFloat));
                         pSrcWeight     += lstride;
-                        pDstWeight     += _outputLayer._stride;
+                        pDstWeight     += _outputLayer.Stride();
                     }                          
                     pWeight            += lstride;
                 }
             }
             else
             {
-                cudaMemcpyAsync(pWeight, _vWeight.data(), _outputLayer._stride * _inputLayer._localStride * sizeof(NNFloat), cudaMemcpyDefault);
-                pWeight                += _outputLayer._stride * _inputLayer._localStride;
+                cudaMemcpyAsync(pWeight, _vWeight.data(), _outputLayer.Stride() * _inputLayer.LocalStride() * sizeof(NNFloat), cudaMemcpyDefault);
+                pWeight                += _outputLayer.Stride() * _inputLayer.LocalStride();
                 for (uint32_t i = 1; i < getGpu()._numprocs; i++)
                 {
                     uint64_t size;
@@ -722,9 +722,9 @@ void NNWeight::Dump(string fname, NNFloat* pBuffer)
     {
         FILE* fp                        = fopen(fname.c_str(), "w");
         NNFloat* pData                  = vWeight.data();
-        for (int i = 0; i < _inputLayer._stride; i++)
+        for (int i = 0; i < _inputLayer.Stride(); i++)
         {
-            for (int j = 0; j < _outputLayer._stride; j++)
+            for (int j = 0; j < _outputLayer.Stride(); j++)
             {
                 fprintf(fp, "%12.9f ", *pData);
                 pData++;
@@ -733,4 +733,57 @@ void NNWeight::Dump(string fname, NNFloat* pBuffer)
         }
         fclose(fp);
     }
+}
+
+const NNLayer& NNWeight::InputLayer() {
+    return _inputLayer;
+}
+const NNLayer& NNWeight::OutputLayer() {
+    return _outputLayer;
+}
+
+void NNWeight::UploadBias() {
+    _pbBias->Upload(_vBias.data());
+}
+void NNWeight::UploadWeight() {
+    _pbWeight->Upload(_vWeight.data());
+}
+
+void NNWeight::DownloadBias() {
+    _pbBias->Download(_vBias.data());
+}
+void NNWeight::DownloadWeight() {
+    _pbWeight->Download(_vWeight.data());
+}
+
+GpuBuffer<NNFloat>* NNWeight::GPUBias() {
+    return _pbBias.get();
+}
+GpuBuffer<NNFloat>* NNWeight::GPUWeight() {
+    return _pbWeight.get();
+}
+vector<NNFloat>& NNWeight::CPUBias() {
+    return _vBias;
+}
+vector<NNFloat>& NNWeight::CPUWeight() {
+    return _vWeight;
+}
+
+GpuBuffer<NNFloat>* NNWeight::WeightGradient() {
+    return _pbWeightGradient.get();
+}
+
+void NNWeight::ClearUpdates() {
+    _updateCount = 0;
+}
+
+uint32_t NNWeight::SharingCount() const {
+    return _sharingCount;
+}
+void NNWeight::IncreaseSharingCount() {
+    _sharingCount += 1;
+}
+
+void NNWeight::ShareWeight(NNWeight* weight) {
+    _pSharedWeight = weight;
 }

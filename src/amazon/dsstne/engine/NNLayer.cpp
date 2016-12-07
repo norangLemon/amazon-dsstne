@@ -518,10 +518,10 @@ void NNLayer::RefreshState(NNNetwork* pNetwork, bool validate)
     if ((_type == NNLayer::Type::Pooling) && (_poolingFunction == PoolingFunction::LRN))
     {
         cudnnStatus_t status = cudnnSetLRNDescriptor(_LRNDescriptor,
-                                                    pNetwork->_LRN_n,
-                                                    pNetwork->_LRN_alpha,
-                                                    pNetwork->_LRN_beta,
-                                                    pNetwork->_LRN_k);
+                                                    pNetwork->LRN_n(),
+                                                    pNetwork->LRN_alpha(),
+                                                    pNetwork->LRN_beta(),
+                                                    pNetwork->LRN_k());
         CUDNNERROR(status, "NNLayer::RefreshState: unable to set LRN descriptor");
     }
 }
@@ -1010,8 +1010,8 @@ void NNLayer::ForwardPropagateConvolutional(uint32_t position, uint32_t batch, b
                                                                       pWeight->_pbWeight->_pDevData,
                                                                       pWeight->_convDesc,
                                                                       pWeight->_convFWAlgo,
-                                                                      getGpu()._pNetwork->_pbCUDNNWorkspace->_pDevData,
-                                                                      getGpu()._pNetwork->_CUDNNWorkspaceSize,
+                                                                      getGpu()._pNetwork->CUDNNWorkspace(),
+                                                                      getGpu()._pNetwork->CUDNNWorkspaceSize(),
                                                                       &beta,
                                                                       getTensorDescriptor(batch),
                                                                       _pbUnit->_pDevData);
@@ -1272,8 +1272,8 @@ void NNLayer::BackPropagateConvolutional(uint32_t position, uint32_t batch, NNFl
         {
             if (_bSparse && getGpu()._data._bSparsenessPenalty)
             {
-                NNFloat p       = (_sparsenessPenalty_p > (NNFloat)0.0)   ? _sparsenessPenalty_p     : getGpu()._pNetwork->_sparsenessPenalty_p;
-                NNFloat beta    = (_sparsenessPenalty_beta > (NNFloat)0.0) ? _sparsenessPenalty_beta : getGpu()._pNetwork->_sparsenessPenalty_beta;
+                NNFloat p       = (_sparsenessPenalty_p > (NNFloat)0.0)   ? _sparsenessPenalty_p     : getGpu()._pNetwork->SparsenessPenalty_p();
+                NNFloat beta    = (_sparsenessPenalty_beta > (NNFloat)0.0) ? _sparsenessPenalty_beta : getGpu()._pNetwork->SparsenessPenalty_beta();
                 kCalculateSparsenessPenalty(batch, _localStride, _pbUnit->_pDevData, _pbDelta->_pDevData, p, beta);
             }   
 
@@ -1312,8 +1312,8 @@ void NNLayer::BackPropagateConvolutional(uint32_t position, uint32_t batch, NNFl
                                                                                  _pbDelta->_pDevData,
                                                                                  pSrcWeight->_convDesc,
                                                                                  pSrcWeight->_convBWWeightAlgo,
-                                                                                 getGpu()._pNetwork->_pbCUDNNWorkspace->_pDevData,
-                                                                                 getGpu()._pNetwork->_CUDNNWorkspaceSize,
+                                                                                 getGpu()._pNetwork->CUDNNWorkspace(),
+                                                                                 getGpu()._pNetwork->CUDNNWorkspaceSize(),
                                                                                  &beta,
                                                                                  pSrcWeight->_convFilterDesc,
                                                                                  pSrcWeight->_pbWeightGradient->_pDevData);
@@ -1347,8 +1347,8 @@ void NNLayer::BackPropagateConvolutional(uint32_t position, uint32_t batch, NNFl
                                                                                _pbDelta->_pDevData,
                                                                                pSrcWeight->_convDesc, 
                                                                                pSrcWeight->_convBWDeltaAlgo,
-                                                                               getGpu()._pNetwork->_pbCUDNNWorkspace->_pDevData,
-                                                                               getGpu()._pNetwork->_CUDNNWorkspaceSize,
+                                                                               getGpu()._pNetwork->CUDNNWorkspace(),
+                                                                               getGpu()._pNetwork->CUDNNWorkspaceSize(),
                                                                                &beta,
                                                                                pInputLayer->getTensorDescriptor(batch),
                                                                                pInputLayer->_pbDelta->_pDevData);
@@ -1469,8 +1469,8 @@ void NNLayer::BackPropagateFullyConnected(uint32_t position, uint32_t batch, NNF
         {
             if (_bSparse && getGpu()._data._bSparsenessPenalty)
             {
-                NNFloat p       = (_sparsenessPenalty_p > (NNFloat)0.0)   ? _sparsenessPenalty_p     : getGpu()._pNetwork->_sparsenessPenalty_p;
-                NNFloat beta    = (_sparsenessPenalty_beta > (NNFloat)0.0) ? _sparsenessPenalty_beta : getGpu()._pNetwork->_sparsenessPenalty_beta;
+                NNFloat p       = (_sparsenessPenalty_p > (NNFloat)0.0)   ? _sparsenessPenalty_p     : getGpu()._pNetwork->SparsenessPenalty_p();
+                NNFloat beta    = (_sparsenessPenalty_beta > (NNFloat)0.0) ? _sparsenessPenalty_beta : getGpu()._pNetwork->SparsenessPenalty_beta();
                 kCalculateSparsenessPenalty(batch, _localStride, _pbUnit->_pDevData, _pbDelta->_pDevData, p, beta);
             }   
 
@@ -1760,8 +1760,8 @@ void NNLayer::BackPropagateFullyConnected(uint32_t position, uint32_t batch, NNF
         {
             if (_bSparse && getGpu()._data._bSparsenessPenalty)
             {
-                NNFloat p       = (_sparsenessPenalty_p > (NNFloat)0.0)   ? _sparsenessPenalty_p     : getGpu()._pNetwork->_sparsenessPenalty_p;
-                NNFloat beta    = (_sparsenessPenalty_beta > (NNFloat)0.0) ? _sparsenessPenalty_beta : getGpu()._pNetwork->_sparsenessPenalty_beta;
+                NNFloat p       = (_sparsenessPenalty_p > (NNFloat)0.0)   ? _sparsenessPenalty_p     : getGpu()._pNetwork->SparsenessPenalty_p();
+                NNFloat beta    = (_sparsenessPenalty_beta > (NNFloat)0.0) ? _sparsenessPenalty_beta : getGpu()._pNetwork->SparsenessPenalty_beta();
                 kCalculateSparsenessPenalty(batch, _localStride, _pbUnit->_pDevData, _pbDelta->_pDevData, p, beta);                
             }   
 
@@ -2289,4 +2289,110 @@ bool NNLayer::WriteNetCDF(NcFile& nc, uint32_t index)
         bResult                     = false;
 
     return bResult;
+}
+
+const string& NNLayer::Name() const {
+    return _name;
+}
+
+const string& NNLayer::DataSet() const {
+    return _dataSet;
+}
+uint32_t NNLayer::Stride() const {
+    return _stride;
+}
+uint32_t NNLayer::LocalStride() const {
+    return _localStride;
+}
+NNFloat* NNLayer::GetUnitBuffer() {
+    return _pbUnit ? _pbUnit->_pDevData : NULL;
+}
+void NNLayer::DownloadUnit(NNFloat* buf) {
+    _pbUnit->Download(buf);
+}
+NNFloat* NNLayer::GetDeltaBuffer() {
+    return _pbDelta ? _pbDelta->_pDevData : NULL;
+}
+uint32_t NNLayer::Batch() const {
+    return _batch;
+}
+uint32_t NNLayer::LocalBatch() const {
+    return _localBatch;
+}
+uint32_t NNLayer::MaxLocalStride() const {
+    return _maxLocalStride;
+}
+uint32_t NNLayer::Dimensions() const {
+    return _dimensions;
+}
+cudnnTensorDescriptor_t NNLayer::TensorDescriptor() const {
+    return _tensorDescriptor;
+}
+NNLayer::Type NNLayer::LayerType() const {
+    return _type;
+}
+NNLayer::Kind NNLayer::LayerKind() const {
+    return _kind;
+}
+NNFloat NNLayer::BiasInit() const {
+    return _biasInit;
+}
+WeightInitialization NNLayer::WeightInit() const {
+    return _weightInit;
+}
+NNFloat NNLayer::WeightInitScale() const {
+    return _weightInitScale;
+}
+
+int32_t NNLayer::Priority() const {
+    return _priority;
+}
+void NNLayer::SetPriority(int32_t p) {
+    _priority = p;
+}
+
+vector<NNLayer*>& NNLayer::IncomingLayer() {
+    return _vIncomingLayer;
+}
+
+vector<NNLayer*>& NNLayer::IncomingSkip() {
+    return _vIncomingSkip;
+}
+
+vector<NNLayer*>& NNLayer::OutgoingLayer() {
+    return _vOutgoingLayer;
+}
+vector<NNLayer*>& NNLayer::OutgoingSkip() {
+    return _vOutgoingSkip;
+}
+
+uint32_t NNLayer::X() const {
+    return _Nx;
+}
+uint32_t NNLayer::Y() const {
+    return _Ny;
+}
+uint32_t NNLayer::Z() const {
+    return _Nz;
+}
+uint32_t NNLayer::W() const {
+    return _Nw;
+}
+bool NNLayer::IsDenoising() const {
+    return _bDenoising;
+}
+
+bool NNLayer::IsDirty() const {
+    return _bDirty;
+}
+
+void NNLayer::MakeDirty() {
+    _bDirty = true;
+}
+
+NNDataSetBase* NNLayer::NNDataSet() {
+    return _pDataSet;
+}
+void NNLayer::SetNNDataSet(NNDataSetBase* data) {
+    _pDataSet = data;
 }

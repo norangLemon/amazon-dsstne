@@ -30,8 +30,6 @@ struct NNWeightDescriptor;
 
 class NNNetwork {
 public:
-    friend class NNLayer;
-    friend class NNWeight;
     friend void GpuContext::SetNeuralNetwork(NNNetwork* pNetwork);
     enum Kind {
         FeedForward,
@@ -133,8 +131,9 @@ private:
 
 
 public:
-
+    NNNetwork(NNNetworkDescriptor& nd, uint32_t batch = DefaultBatch);
     ~NNNetwork();
+
     void ClearDataSets();
     void LoadDataSets(vector<NNDataSetBase*>& vData);
     void Randomize();
@@ -196,6 +195,18 @@ public:
     bool SetSMCE(NNFloat oneTarget = 0.9f, NNFloat zeroTarget = 0.1f, NNFloat oneScale = 1.0f, NNFloat zeroScale = 1.0f);
     bool SetCheckpoint(string name, int32_t interval);
 
+    NNFloat SparsenessPenalty_p();
+    NNFloat SparsenessPenalty_beta();
+
+    uint8_t* CUDNNWorkspace();
+    size_t CUDNNWorkspaceSize();
+    void SetCUDNNWorkspace(size_t size);
+
+    NNFloat LRN_k();
+    uint32_t LRN_n();
+    NNFloat LRN_alpha();
+    NNFloat LRN_beta();
+
 private:
     void CalculatePropagationOrder();
     bool GenerateNetworkGraph();
@@ -211,10 +222,8 @@ private:
     void ClearUpdates();
     void BackPropagate(NNFloat alpha);
     void UpdateWeights(NNFloat alpha, NNFloat lambda, NNFloat mu);
-    NNNetwork(NNNetworkDescriptor& nd, uint32_t batch = DefaultBatch);
     void RefreshState();
     void Shuffle();
-    void SetCUDNNWorkspace(size_t size);
 };
 
 ostream& operator<< (ostream& out, NNNetwork::Kind& k);

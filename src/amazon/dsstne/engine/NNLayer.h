@@ -19,16 +19,21 @@
 #include <netcdf>
 
 #include "GpuBuffer.h"
+#include "NNNetwork.h"
+#include "NNWeight.h"
 #include "NNTypes.h"
 
-class NNWeight;
 struct NNLayerDescriptor;
 
 class NNLayer {
 public:
-    friend class NNNetwork;
-    friend class NNWeight;
+    friend NNNetwork::NNNetwork(NNNetworkDescriptor& nd, uint32_t batch);
     friend NNNetwork* LoadNeuralNetworkNetCDF(const string& fname, int batch);
+    friend bool NNNetwork::SaveNetCDF(const string& fname);
+    friend void NNWeight::Dump(string fname, NNFloat* pBuffer);
+    friend void NNNetwork::DumpLayer(FILE* fp, const string& layer);
+    friend bool NNWeight::WriteNetCDF(netCDF::NcFile& nc, uint32_t index, NNFloat* pWeight, NNFloat* pBias);
+    friend NNWeight::NNWeight(NNLayer& input, NNLayer& output, bool bShared, bool bTransposed, bool bLocked, NNFloat maxNorm);
     enum Kind 
     {
         Input,
@@ -140,39 +145,42 @@ private:
     unique_ptr<GpuBuffer<NNFloat>> _pbDropout;              // Dropout random values if active
     int32_t                     _priority;                  // Mutable priority for calculating propagation ordering
     NNLayer(NNLayerDescriptor& l, uint32_t batch);
-    ~NNLayer();
     void Allocate(bool validate);
     void Deallocate();
-    void SetBatch(uint32_t batch);
     void RefreshParallelization();
-    void RefreshState(NNNetwork* pNetwork, bool validate);
-    void LoadPredictionBatch(uint32_t position, uint32_t batch);
-    void LoadTrainingBatch(uint32_t position, uint32_t batch);
-    void LoadValidationBatch(uint32_t position, uint32_t batch);
-    void ForwardPropagate(uint32_t position, uint32_t batch, bool bTraining = false);
     void ForwardPropagateFullyConnected(uint32_t position, uint32_t batch, bool bTraining);    
     void ForwardPropagateConvolutional(uint32_t position, uint32_t batch, bool bTraining);
     void ForwardPropagatePooling(uint32_t position, uint32_t batch, bool bTraining);
     void CalculateActivation(uint32_t batch);
     void CalculateDropout(uint32_t batch);
-    NNFloat CalculateError(uint32_t position, uint32_t batch, ErrorFunction ef);
-    void BackPropagate(uint32_t position, uint32_t batch, NNFloat alpha);
     void BackPropagateFullyConnected(uint32_t position, uint32_t batch, NNFloat alpha);    
     void BackPropagateConvolutional(uint32_t position, uint32_t batch, NNFloat alpha);
     void BackPropagatePooling(uint32_t position, uint32_t batch, NNFloat alpha);        
-    void CalculateOutputDelta(uint32_t position, uint32_t batch, ErrorFunction ef);
-    void GenerateDenoisingData();
     void Reduce(uint32_t batch, uint32_t stride, NNFloat* pBuffer, uint32_t localStride, uint32_t updateCount);
     void Gather(uint32_t batch, uint32_t stride, NNFloat* pBuffer, uint32_t localStride);
-    void ClearUpdates();
     void Dump(string fname, NNFloat* pData);
     bool WriteNetCDF(netCDF::NcFile& nc, uint32_t index);
-    NNFloat* GetUnitBuffer() { return _pbUnit ? _pbUnit->_pDevData : NULL; }
-    NNFloat* GetDeltaBuffer() { return _pbDelta ? _pbDelta->_pDevData : NULL; }
-    uint64_t GetBufferSize() { return _batch * _stride; }
     cudnnTensorDescriptor_t getTensorDescriptor(uint32_t batch);
 
 public:
+    ~NNLayer();
+
+    void SetBatch(uint32_t batch);
+    void RefreshState(NNNetwork* pNetwork, bool validate);
+
+    void LoadPredictionBatch(uint32_t position, uint32_t batch);
+    void LoadTrainingBatch(uint32_t position, uint32_t batch);
+    void LoadValidationBatch(uint32_t position, uint32_t batch);
+
+    void ForwardPropagate(uint32_t position, uint32_t batch, bool bTraining = false);
+    void BackPropagate(uint32_t position, uint32_t batch, NNFloat alpha);
+    void CalculateOutputDelta(uint32_t position, uint32_t batch, ErrorFunction ef);
+    NNFloat CalculateError(uint32_t position, uint32_t batch, ErrorFunction ef);
+    void ClearUpdates();
+    void GenerateDenoisingData();
+
+    uint64_t GetBufferSize() { return _batch * _stride; }
+
     tuple<uint32_t, uint32_t, uint32_t, uint32_t> GetDimensions();
     tuple<uint32_t, uint32_t, uint32_t, uint32_t> GetLocalDimensions();
     tuple<uint32_t, uint32_t, uint32_t> GetKernelDimensions();
@@ -182,6 +190,44 @@ public:
     //NNFloat GetDeltaNorm();
     //bool SetWeightNorm(NNFloat norm);
     //bool SetDeltaNorm(NNFloat norm);
+
+    const string& Name() const;
+    const string& DataSet() const;
+    uint32_t Stride() const;
+    uint32_t LocalStride() const;
+    NNFloat* GetUnitBuffer();
+    void DownloadUnit(NNFloat* buf);
+    NNFloat* GetDeltaBuffer();
+    uint32_t Batch() const;
+    uint32_t LocalBatch() const;
+    uint32_t MaxLocalStride() const;
+    uint32_t Dimensions() const;
+    cudnnTensorDescriptor_t TensorDescriptor() const;
+    Type LayerType() const;
+    Kind LayerKind() const;
+    NNFloat BiasInit() const;
+    WeightInitialization WeightInit() const;
+    NNFloat WeightInitScale() const;
+
+    int32_t Priority() const;
+    void SetPriority(int32_t p);
+
+    vector<NNLayer*>& IncomingLayer();
+    vector<NNLayer*>& IncomingSkip();
+    vector<NNLayer*>& OutgoingLayer();
+    vector<NNLayer*>& OutgoingSkip();
+
+    uint32_t X() const;
+    uint32_t Y() const;
+    uint32_t Z() const;
+    uint32_t W() const;
+    bool IsDenoising() const;
+    bool IsDirty() const;
+
+    void MakeDirty();
+
+    NNDataSetBase* NNDataSet();
+    void SetNNDataSet(NNDataSetBase* data);
 };
 
 

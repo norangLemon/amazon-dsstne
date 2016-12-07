@@ -358,11 +358,11 @@ _pbCUDNNWorkspace()
 
         // Single out and save input and output layers to simplify
         // training and prediction
-        if (_vLayer.back()->_kind == NNLayer::Kind::Input)
+        if (_vLayer.back()->LayerKind() == NNLayer::Kind::Input)
         {
             _vInputLayer.push_back(_vLayer.back());
         }
-        else if (_vLayer.back()->_kind == NNLayer::Kind::Output)
+        else if (_vLayer.back()->LayerKind() == NNLayer::Kind::Output)
         {
              _vOutputLayer.push_back(_vLayer.back());    
         }   
@@ -393,7 +393,7 @@ _pbCUDNNWorkspace()
                 exit(-1);                
             }
             
-            l->_vIncomingSkip.push_back(pLayer);
+            l->IncomingSkip().push_back(pLayer);
             pLayer->_vOutgoingSkip.push_back(l);
         }
         
@@ -403,7 +403,7 @@ _pbCUDNNWorkspace()
             for (const auto& s: l->_vSource)
             {
                 NNLayer* pLayer = _mLayer[s]; 
-                l->_vIncomingLayer.push_back(pLayer);
+                l->IncomingLayer().push_back(pLayer);
                 pLayer->_vOutgoingLayer.push_back(l);  
                 
                 // BUG Multi-GPU              
@@ -440,7 +440,7 @@ _pbCUDNNWorkspace()
                     NNFloat* pSrc               = wd._vWeight.data() + pOutputLayer->_minX;
                     for (size_t i = 0; i < pInputLayer->_stride; i++)
                     {
-                        memcpy(pDst, pSrc, pOutputLayer->_localStride * sizeof(NNFloat));
+                        memcpy(pDst, pSrc, pOutputLayer->LocalStride() * sizeof(NNFloat));
                         pSrc                   += pOutputLayer->_stride;
                         pDst                   += pOutputLayer->_localStride;
                     }
@@ -525,10 +525,10 @@ _pbCUDNNWorkspace()
                             exit(-1);   
                     }                                    
                 
-                    _vWeight[i]->_pSharedWeight = _vWeight[j];
-                    if (_vWeight[j]->_sharingCount == 1)
+                    _vWeight[i]->ShareWeight(_vWeight[j]);
+                    if (_vWeight[j]->SharingCount() == 1)
                         _vSharedWeight.push_back(_vWeight[j]);
-                    _vWeight[j]->_sharingCount++;
+                    _vWeight[j]->IncreaseSharingCount();
                     bFound                      = true;
                     break;
                 }
@@ -539,7 +539,7 @@ _pbCUDNNWorkspace()
             {
                 if (getGpu()._id == 0)
                     printf("NNNetwork::NNNetwork: Unable to locate shared weights for connection between layers %s and %s.\n", 
-                    _vWeight[i]->_inputLayer._name.c_str(), _vWeight[i]->_outputLayer._name.c_str());
+                    _vWeight[i]->InputLayer()._name.c_str(), _vWeight[i]->OutputLayer()._name.c_str());
                 getGpu().Shutdown();
                 exit(-1);
             }        
@@ -637,7 +637,7 @@ bool NNNetwork::LockWeights(const string& inputLayer, const string& outputLayer)
 
     for (uint32_t i = 0; i < _vWeight.size(); i++)
     {
-        if ((_vWeight[i]->_inputLayer._name == pInputLayer->_name) && (_vWeight[i]->_outputLayer._name == pOutputLayer->_name))
+        if ((_vWeight[i]->InputLayer().Name() == pInputLayer->Name()) && (_vWeight[i]->OutputLayer().Name() == pOutputLayer->Name()))
         {
             _vWeight[i]->Lock();
             return true;
@@ -670,7 +670,7 @@ bool NNNetwork::UnlockWeights(const string& inputLayer, const string& outputLaye
 
     for (uint32_t i = 0; i < _vWeight.size(); i++)
     {
-        if ((_vWeight[i]->_inputLayer._name == pInputLayer->_name) && (_vWeight[i]->_outputLayer._name == pOutputLayer->_name))
+        if ((_vWeight[i]->InputLayer().Name() == pInputLayer->Name()) && (_vWeight[i]->OutputLayer().Name() == pOutputLayer->Name()))
         {
             _vWeight[i]->Unlock();
             return true;
@@ -789,10 +789,10 @@ void NNNetwork::RefreshState()
         // Always need data sets (even if empty) to predict or train
         for (const auto& l: _vInputLayer)
         {
-            if (l->_pDataSet == NULL)
+            if (l->NNDataSet() == NULL)
             {
                 if (getGpu()._id == 0)
-                    cout << "NNNetwork::RefreshState: Missing data set " << l->_dataSet << " for input layer " << l->_name << endl;
+                    cout << "NNNetwork::RefreshState: Missing data set " << l->DataSet() << " for input layer " << l->Name() << endl;
                 _bAllDataLoaded                 = false;
             }
         }
@@ -802,10 +802,10 @@ void NNNetwork::RefreshState()
         {
             for (const auto& l: _vOutputLayer)
             {
-                if (l->_pDataSet == NULL)
+                if (l->NNDataSet() == NULL)
                 {
                     if (getGpu()._id == 0)
-                        cout << "NNNetwork::RefreshState: Missing data set " << l->_dataSet << " for output layer " << l->_name << endl;
+                        cout << "NNNetwork::RefreshState: Missing data set " << l->DataSet() << " for output layer " << l->Name() << endl;
                     _bAllDataLoaded                 = false;
                 }
             }
@@ -817,7 +817,7 @@ void NNNetwork::RefreshState()
         // Reallocate layers if batch size doesn't match
         for (const auto& l: _vLayer)
         {
-            if (l->_bDirty)
+            if (l->IsDirty())
             {
                 l->RefreshState(this, _mode == Validation);
             }
@@ -865,9 +865,9 @@ void NNNetwork::ClearDataSets()
     _examples                                   = 0;
     _bExamplesFound                             = false;
     for (const auto& l: _vInputLayer)
-         l->_pDataSet                           = NULL;
+         l->SetNNDataSet(NULL);
     for (const auto& l: _vOutputLayer)
-         l->_pDataSet                           = NULL;
+         l->SetNNDataSet(NULL);
 }
 
 
@@ -879,27 +879,27 @@ void NNNetwork::LoadDataSets(vector<NNDataSetBase*>& vData)
     {
         for (const auto& d: vData)
         {
-            if (l->_dataSet.compare(d->_name) == 0)
+            if (l->DataSet().compare(d->_name) == 0)
             {
                 // Check if dimensionality of data matches
-                if (l->_dimensions != d->_dimensions)
+                if (l->Dimensions() != d->_dimensions)
                 {
                     if (getGpu()._id == 0)
                     {
                         printf("NNNetwork::LoadDataSets: Dimensionality mismatch %uD input layer %s versus %uD data set %s\n",
-                        l->_dimensions, l->_name.c_str(), d->_dimensions, d->_name.c_str());
+                        l->Dimensions(), l->Name().c_str(), d->_dimensions, d->_name.c_str());
                     }
                 }
 
                 // Check if input layer and data set dimensions match
-                if ((l->_Nx < d->_width) ||
-                    (l->_Ny < d->_height) ||
-                    (l->_Nz < d->_length))
+                if ((l->X() < d->_width) ||
+                    (l->Y() < d->_height) ||
+                    (l->Z() < d->_length))
                 {
                     if (getGpu()._id == 0)
                     {
                         printf("NNNetwork::LoadDataSets: Data element mismatch (%u, %u, %u) input layer %s versus (%u, %u, %u) data set %s\n",
-                        l->_Nx, l->_Ny, l->_Nz, l->_name.c_str(),
+                        l->X(), l->Y(), l->Z(), l->Name().c_str(),
                         d->_width, d->_height, d->_length, d->_name.c_str());
                     }
                     break;
@@ -921,10 +921,10 @@ void NNNetwork::LoadDataSets(vector<NNDataSetBase*>& vData)
                 }
 
                 // Signal successful location of matching data set
-                l->_pDataSet                    = d;
-                l->_bDirty                      = true;  
+                l->SetNNDataSet(d);
+                l->MakeDirty();
                 if (getGpu()._id == 0)
-                    printf("NNNetwork::LoadDataSets: Found data set %s for input layer %s\n", d->_name.c_str(), l->_name.c_str());
+                    printf("NNNetwork::LoadDataSets: Found data set %s for input layer %s\n", d->_name.c_str(), l->Name().c_str());
                 break;
             }
         }
@@ -935,27 +935,27 @@ void NNNetwork::LoadDataSets(vector<NNDataSetBase*>& vData)
     {
         for (const auto& d: vData)
         {
-            if (l->_dataSet.compare(d->_name) == 0)
+            if (l->DataSet().compare(d->_name) == 0)
             {
                 // Check if dimensionality of data matches
-                if (l->_dimensions != d->_dimensions)
+                if (l->Dimensions() != d->_dimensions)
                 {
                     if (getGpu()._id == 0)
                     {
                         printf("NNNetwork::LoadDataSets: Dimensionality mismatch %uD output layer %s versus %uD data set %s\n",
-                        l->_dimensions, l->_name.c_str(), d->_dimensions, d->_name.c_str());
+                        l->Dimensions(), l->Name().c_str(), d->_dimensions, d->_name.c_str());
                     }
                 }
 
                 // Check if output layer and data set dimensions match
-                if ((l->_Nx < d->_width) ||
-                    (l->_Ny < d->_height) ||
-                    (l->_Nz < d->_length))
+                if ((l->X() < d->_width) ||
+                    (l->Y() < d->_height) ||
+                    (l->Z() < d->_length))
                 {
                     if (getGpu()._id == 0)
                     {
                         printf("NNNetwork::LoadDataSets: Data element mismatch (%u, %u, %u) output layer %s versus (%u, %u, %u) data set %s\n",
-                        l->_Nx, l->_Ny, l->_Nz, l->_name.c_str(),
+                        l->X(), l->Y(), l->Z(), l->Name().c_str(),
                         d->_width, d->_height, d->_length, d->_name.c_str());
                     }
                     break;
@@ -977,10 +977,10 @@ void NNNetwork::LoadDataSets(vector<NNDataSetBase*>& vData)
                 }
 
                 // Signal successful location of matching data set
-                l->_pDataSet                    = d;
-                l->_bDirty                      = true; 
+                l->SetNNDataSet(d);
+                l->MakeDirty();
                 if (getGpu()._id == 0)       
-                    printf("NNNetwork::LoadDataSets: Found data set %s for output layer %s\n", d->_name.c_str(), l->_name.c_str());
+                    printf("NNNetwork::LoadDataSets: Found data set %s for output layer %s\n", d->_name.c_str(), l->Name().c_str());
                 break;
             }
         }
@@ -1048,7 +1048,7 @@ void NNNetwork::SaveWeights(const string& fname, const string& inputLayer, const
 
         for (const auto& w: _vWeight)
         {
-            if ((w->_inputLayer._name == pInputLayer->_name) && (w->_outputLayer._name == pOutputLayer->_name))
+            if ((w->_inputLayer.Name() == pInputLayer->Name()) && (w->_outputLayer.Name() == pOutputLayer->Name()))
             {
                 FILE* fp = fopen(fname.c_str(), "w");
                 if (fp == NULL)
@@ -1159,7 +1159,7 @@ void NNNetwork::DumpLayer(FILE* fp, const string& layer)
         uint32_t stride     = pLayer->_localStride;
         uint64_t size       = _batch * stride;
         vector<float> vData(size);
-        pLayer->_pbUnit->Download(vData.data());
+        pLayer->DownloadUnit(vData.data());
         for (uint32_t j = 0; j < batch; j++)
         {
             for (uint32_t k = 0; k < stride; k++)
@@ -1218,13 +1218,13 @@ void NNNetwork::DumpBatch(FILE* fp)
     {
         for (int i = 0; i < _vOutputLayer.size(); i++)
         {
-            uint32_t stride     = _vOutputLayer[i]->_localStride;
-            uint32_t batch      = _vOutputLayer[i]->_batch;
+            uint32_t stride     = _vOutputLayer[i]->LocalStride();
+            uint32_t batch      = _vOutputLayer[i]->Batch();
             if (batch + _position > _examples)
                 batch           = _examples - _position;
             uint64_t size       = (uint64_t)batch * (uint64_t)stride;
             vector<NNFloat> vData(size);
-            _vOutputLayer[i]->_pbUnit->Download(vData.data());
+            _vOutputLayer[i]->DownloadUnit(vData.data());
             for (uint32_t j = 0; j < batch; j++)
             {
                 for (uint32_t k = 0; k < stride; k++)
@@ -1454,7 +1454,7 @@ NNFloat NNNetwork::Train(uint32_t epochs, NNFloat alpha, NNFloat lambda, NNFloat
         {
             for (const auto& l: _vInputLayer)
             {
-                if (l->_bDenoising)
+                if (l->IsDenoising())
                     l->GenerateDenoisingData();
             }
         }
@@ -1562,7 +1562,7 @@ void NNNetwork::ClearUpdates()
 {
     for (const auto& w: _vWeight)
     {
-        w->_updateCount                     = 0;
+        w->ClearUpdates();
     }
     
     for (const auto& l: _vLayer)
@@ -1617,7 +1617,7 @@ void NNNetwork::BackPropagate(NNFloat alpha)
 
     for (const auto& l: _vBPOrder)
     {
-        switch (l->_kind)
+        switch (l->LayerKind())
         {
             case NNLayer::Kind::Output:
                 l->CalculateOutputDelta(_position, batch, _errorFunction);
@@ -1662,10 +1662,10 @@ void NNNetwork::CalculateTopK(const string& layer, uint32_t k, GpuBuffer<NNFloat
             printf("NNNetwork::CalculateTopK: Can only calculate 128 or fewer elements.\n");
         return;
     }
-    else if (k > pLayer->_Nx * pLayer->_Ny * pLayer->_Nz)
+    else if (k > pLayer->X() * pLayer->Y() * pLayer->Z())
     {
         if (getGpu()._id == 0)
-            printf("NNNetwork::CalculateTopK: Layer has fewer elements than k (%u vs %u).\n", k, pLayer->_Nx * pLayer->_Ny * pLayer->_Nz);    
+            printf("NNNetwork::CalculateTopK: Layer has fewer elements than k (%u vs %u).\n", k, pLayer->X() * pLayer->Y() * pLayer->Z());
         return;  
     }
 
@@ -1673,7 +1673,7 @@ void NNNetwork::CalculateTopK(const string& layer, uint32_t k, GpuBuffer<NNFloat
     uint32_t batch          = _batch;
     if (_position + batch > _examples)
         batch               = _examples - _position;
-    kCalculateTopK(pLayer->_pbUnit->_pDevData, pbKey->_pDevData, pbValue->_pDevData, batch, pLayer->_localStride, k);
+    kCalculateTopK(pLayer->GetUnitBuffer(), pbKey->_pDevData, pbValue->_pDevData, batch, pLayer->LocalStride(), k);
 
     return;
 }
@@ -1847,7 +1847,7 @@ vector<string> NNNetwork::GetLayers()
 {
     vector<string> vResult;
     for (const auto& l: _vLayer)
-        vResult.push_back(l->_name);
+        vResult.push_back(l->Name());
     return vResult;
 }
 
@@ -1912,7 +1912,7 @@ NNWeight* NNNetwork::GetWeight(const string& inputLayer, const string& outputLay
 
     // Search for matching set of weights
     for (const auto& p: _vWeight)
-        if ((&(p->_inputLayer) == pInputLayer) && (&(p->_outputLayer) == pOutputLayer))
+        if ((&(p->InputLayer()) == pInputLayer) && (&(p->OutputLayer()) == pOutputLayer))
             return p;
 
     // Report failure to find weights connecting layers
@@ -1942,8 +1942,8 @@ NNFloat* NNNetwork::GetWeightBuffer(const string& inputLayer, const string& outp
 
     // Search for matching set of weights
     for (const auto& p: _vWeight)
-        if ((&(p->_inputLayer) == pInputLayer) && (&(p->_outputLayer) == pOutputLayer))
-            return p->_vWeight.data();
+        if ((&(p->InputLayer()) == pInputLayer) && (&(p->OutputLayer()) == pOutputLayer))
+            return p->CPUWeight().data();
 
     // Report failure to find weights connecting layers
     if (getGpu()._id == 0)
@@ -2145,14 +2145,14 @@ void NNNetwork::CalculatePropagationOrder()
     struct CompareLayer {
         bool operator()(NNLayer* l1 , NNLayer* l2)
         {
-           return (l1->_priority < l2->_priority);
+           return (l1->Priority() < l2->Priority());
         }
     };
        
     // Initialize FP priorities
     for (const auto& p : _vLayer)
     {
-        p->_priority            = (p->_kind == NNLayer::Kind::Input) ? 0 : -1;
+        p->SetPriority((p->LayerKind() == NNLayer::Kind::Input) ? 0 : -1);
     }
     
     
@@ -2170,22 +2170,22 @@ void NNNetwork::CalculatePropagationOrder()
         NNLayer* pLayer         = pqueue.top();
         pqueue.pop();
         
-        int32_t priority       = pLayer->_priority + 1;
-        for (const auto& p : pLayer->_vOutgoingLayer)
+        int32_t priority       = pLayer->Priority() + 1;
+        for (const auto& p : pLayer->OutgoingLayer())
         {
-            if (p->_priority < priority)
+            if (p->Priority() < priority)
             {
-                p->_priority    = priority;
+                p->SetPriority(priority);
                 pqueue.push(p);
             }
         }
 
         // Handle skip layers
-        for (const auto& p : pLayer->_vOutgoingSkip)
+        for (const auto& p : pLayer->OutgoingSkip())
         {
-            if (p->_priority < priority)
+            if (p->Priority() < priority)
             {
-                p->_priority    = priority;
+                p->SetPriority(priority);
                 pqueue.push(p);
             }            
         }
@@ -2204,7 +2204,7 @@ void NNNetwork::CalculatePropagationOrder()
     // Initialize BP priorities
     for (const auto& p : _vLayer)
     {
-        p->_priority            = (p->_kind == NNLayer::Kind::Output) ? 0 : -1;
+        p->SetPriority((p->LayerKind() == NNLayer::Kind::Output) ? 0 : -1);
     }
     
     // Create BP queue
@@ -2218,22 +2218,22 @@ void NNNetwork::CalculatePropagationOrder()
     {
         NNLayer* pLayer         = pqueue.top();
         pqueue.pop();
-        int32_t priority       = pLayer->_priority + 1;
-        for (const auto& p : pLayer->_vIncomingLayer)
+        int32_t priority       = pLayer->Priority() + 1;
+        for (const auto& p : pLayer->IncomingLayer())
         {
-            if (p->_priority < priority)
+            if (p->Priority() < priority)
             {
-                p->_priority    = priority;
+                p->SetPriority(priority);
                 pqueue.push(p);
             }
         } 
         
         // Handle skip layers
-        for (const auto& p : pLayer->_vIncomingSkip)
+        for (const auto& p : pLayer->IncomingSkip())
         {
-            if (p->_priority < priority)
+            if (p->Priority() < priority)
             {
-                p->_priority    = priority;
+                p->SetPriority(priority);
                 pqueue.push(p);
             }
         }       
@@ -2344,10 +2344,10 @@ bool NNNetwork::Validate()
     for (int id =0; id < _vWeight.size(); id++) {
         NNWeight* w = _vWeight[id];
 
-        vWeightGradient.push_back(vector<NNFloat>(w->_vWeight.size()));        
-        w->_pbWeight->Download(w->_vWeight.data());
-        w->_pbBias->Download(w->_vBias.data());
-        w->_pbWeightGradient->Download(vWeightGradient.back().data());
+        vWeightGradient.push_back(vector<NNFloat>(w->CPUWeight().size()));
+        w->DownloadWeight();
+        w->DownloadBias();
+        w->WeightGradient()->Download(vWeightGradient.back().data());
     }
 
     // get gradients for bias (bias gradient is not stored, so get it throgh UpdateWeights)
@@ -2363,20 +2363,20 @@ bool NNNetwork::Validate()
 
     for (int id = 0; id < _vWeight.size(); id++) {        
         NNWeight* w = _vWeight[id];
-        vBiasGradient.push_back(vector<NNFloat>(w->_vBias.size()));
+        vBiasGradient.push_back(vector<NNFloat>(w->CPUBias().size()));
         vector<NNFloat>& bias = vBiasGradient[id];
 
         // Display information about current weight set
-        cout << "Validating weights between layer " << w->_inputLayer._name << " and " << w->_outputLayer._name << ".\n";
+        cout << "Validating weights between layer " << w->InputLayer().Name() << " and " << w->OutputLayer().Name() << ".\n";
       
-        w->_pbWeight->Upload(w->_vWeight.data()); // restore weights
+        w->UploadWeight(); // restore weights
         // get bias gradient (TODO inseatd of this hack it is better to have explicit bias gradient)
-        vector<NNFloat> bias_g(w->_pbBias->_length);
-        w->_pbBias->Download(bias_g.data());
+        vector<NNFloat> bias_g(w->GPUBias()->_length);
+        w->GPUBias()->Download(bias_g.data());
         for (int b = 0; b < bias_g.size(); b++) {
-          bias[b] = bias_g[b] - w->_vBias[b];
+          bias[b] = bias_g[b] - w->CPUBias()[b];
         }
-        w->_pbBias->Upload(w->_vBias.data()); // restore bias
+        w->UploadBias(); // restore bias
     }
 
     // Now tweak each weight and bias individually to determine change in loss function
@@ -2384,15 +2384,15 @@ bool NNNetwork::Validate()
         NNWeight* w = _vWeight[id];
 
         // Display information about current weight set
-        cout << "Validating weights between layer " << w->_inputLayer._name << " and " << w->_outputLayer._name << ".\n";
+        cout << "Validating weights between layer " << w->InputLayer().Name() << " and " << w->OutputLayer().Name() << ".\n";
       
         cout << "Tweak weights" << endl;
-        for (size_t i = 0; i < w->_vWeight.size(); i++) {
-            NNFloat oldWeight                               = w->_vWeight[i];
-            w->_vWeight[i]                                 += delta;
-            w->_pbWeight->Upload(w->_vWeight.data());
+        for (size_t i = 0; i < w->CPUWeight().size(); i++) {
+            NNFloat oldWeight                               = w->CPUWeight()[i];
+            w->CPUWeight()[i]                                 += delta;
+            w->UploadWeight();
             PredictValidationBatch();
-            w->_vWeight[i]                                  = oldWeight;
+            w->CPUWeight()[i]                                  = oldWeight;
             NNFloat error_training, error_regularization, error;
             tie(error_training, error_regularization)       = CalculateError(lambda);
             error                                           = error_training + error_regularization;
@@ -2405,15 +2405,15 @@ bool NNNetwork::Validate()
                 result = false;
             }
         }
-        w->_pbWeight->Upload(w->_vWeight.data()); // restore original weights
+        w->UploadWeight(); // restore original weights
 
         cout << "Tweak biases" << endl;
-        for (size_t i = 0; i < w->_vBias.size(); i++) {
-            NNFloat oldBias                               = w->_vBias[i];
-            w->_vBias[i]                                 += delta;
-            w->_pbBias->Upload(w->_vBias.data());
+        for (size_t i = 0; i < w->CPUBias().size(); i++) {
+            NNFloat oldBias                               = w->CPUBias()[i];
+            w->CPUBias()[i]                                 += delta;
+            w->UploadBias();
             PredictValidationBatch();
-            w->_vBias[i]                                  = oldBias;
+            w->CPUBias()[i]                                  = oldBias;
             NNFloat error_training, error_regularization, error;
             tie(error_training, error_regularization)       = CalculateError(lambda);
             error                                           = error_training + error_regularization;
@@ -2426,7 +2426,7 @@ bool NNNetwork::Validate()
                 result = false;
             }
         }
-        w->_pbBias->Upload(w->_vBias.data()); // restore original bias
+        w->UploadBias(); // restore original bias
     }  
    
     return result;
@@ -2471,7 +2471,7 @@ void NNNetwork::AllocatePeerBuffers()
         _maxStride                          = 0;
         for (const auto& w : _vWeight)
         {
-            uint32_t stride                 = (w->_outputLayer._stride * 2) > (w->_inputLayer._stride * 2) ? w->_inputLayer._stride : w->_outputLayer._stride;
+            uint32_t stride                 = (w->OutputLayer().Stride() * 2) > (w->InputLayer().Stride() * 2) ? w->InputLayer().Stride() : w->OutputLayer().Stride();
             if (stride > _maxStride)
             {
                 _maxStride                  = stride;
@@ -3922,4 +3922,31 @@ bool NNNetwork::P2P_Allreduce(NNFloat* pBuffer, size_t size)
         }
     }
     return true;
+}
+NNFloat NNNetwork::SparsenessPenalty_p() {
+    return _sparsenessPenalty_p;
+}
+NNFloat NNNetwork::SparsenessPenalty_beta() {
+    return _sparsenessPenalty_beta;
+}
+
+size_t NNNetwork::CUDNNWorkspaceSize() {
+    return _CUDNNWorkspaceSize;
+}
+
+uint8_t* NNNetwork::CUDNNWorkspace() {
+    return _pbCUDNNWorkspace->_pDevData;
+}
+
+NNFloat NNNetwork::LRN_k() {
+    return _LRN_k;
+}
+uint32_t NNNetwork::LRN_n() {
+    return _LRN_n;
+}
+NNFloat NNNetwork::LRN_alpha() {
+    return _LRN_alpha;
+}
+NNFloat NNNetwork::LRN_beta() {
+    return _LRN_beta;
 }
