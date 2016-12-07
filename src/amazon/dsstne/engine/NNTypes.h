@@ -28,6 +28,8 @@
 #include <sys/time.h>
 #include <cmath>
 
+using std::ostream;
+
 class NNDataSetBase;
 class NNLayer;
 class NNNetwork;
@@ -228,71 +230,6 @@ ostream& operator<< (ostream& out, NNDataSetEnums::Attributes& a);
 ostream& operator<< (ostream& out, NNDataSetEnums::Kind& k);
 ostream& operator<< (ostream& out, NNDataSetEnums::DataType& t);
 ostream& operator<< (ostream& out, NNDataSetEnums::Sharding& s);
-
-
-
-template<typename T> class NNDataSet : public NNDataSetBase {
-public:
-    friend class NNetwork;
-    friend class NNLayer;
-    friend vector<NNDataSetBase*> LoadNetCDF(const string& fname);
-    friend bool SaveNetCDF(const string& fname, vector<NNDataSetBase*> vDataSet);
-
-private:
-
-    vector<T>               _vData;
-    GpuBuffer<T>*           _pbData;
-    vector<T>               _vSparseData;
-    GpuBuffer<T>*           _pbSparseData;
-    GpuBuffer<T>*           _pbSparseTransposedData;
-
-
-    // Force constructor private
-    NNDataSet(const string& fname, uint32_t n);
-    bool Rename(const string& name);
-    bool SaveNetCDF(const string& fname);
-    bool WriteNetCDF(netCDF::NcFile& nfc, const string& fname, const uint32_t n);
-    void RefreshState(uint32_t batch) {}    
-    bool Shard(NNDataSetEnums::Sharding sharding);
-    bool UnShard();
-    vector<tuple<uint64_t, uint64_t> > getMemoryUsage();
-    bool CalculateSparseDatapointCounts();
-    bool GenerateSparseTransposedMatrix(uint32_t batch, NNLayer* pLayer);
-    bool CalculateSparseTransposedMatrix(uint32_t position, uint32_t batch, NNLayer* pLayer);
-    bool CalculateSparseTransposedDenoisedMatrix(uint32_t position, uint32_t batch, NNLayer* pLayer);
-    bool CalculateSparseTransposedWeightGradient(NNFloat alpha, NNFloat beta, uint32_t m, uint32_t n, NNFloat* pDelta, NNFloat* pWeightGradient);     
-    bool SetDenoising(bool flag);
-    bool GenerateDenoisingData();
-    bool LoadInputUnit(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit);
-    bool LoadSparseInputUnit(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit);
-    bool LoadSparseDenoisedInputUnit(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit);
-    bool CalculateSparseZ(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pWeight, NNFloat* pUnit, NNFloat beta);
-    bool CalculateSparseDenoisedZ(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pWeight, NNFloat* pUnit, NNFloat beta);
-    float CalculateL1Error(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit);
-    float CalculateL2Error(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit);
-    float CalculateCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit);
-    float CalculateScaledMarginalCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit);
-    float CalculateMultinomialCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit);
-    float CalculateMultinomialScaledMarginalCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit);
-    bool CalculateL1OutputDelta(Activation activation, uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, NNFloat* pDelta);
-    bool CalculateCrossEntropyOutputDelta(Activation activation, uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, NNFloat* pDelta);
-    bool CalculateScaledMarginalCrossEntropyOutputDelta(Activation activation, uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, NNFloat* pDelta);    
-    bool CalculateOutputDelta(Activation activation, uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, NNFloat* pDelta);
-    float CalculateDataScaledMarginalCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit);
-    bool CalculateDataScaledMarginalCrossEntropyOutputDelta(Activation activation, uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, NNFloat* pDelta);
-
-public:
-
-    ~NNDataSet();
-    void Shuffle();
-    T GetDataPoint(uint32_t n, uint32_t x, uint32_t y = 0, uint32_t z = 0);
-    bool SetDataPoint(T v, uint32_t n, uint32_t x, uint32_t y = 0, uint32_t z = 0);
-    uint32_t GetSparseDataPoints(uint32_t n);
-    uint32_t GetSparseIndex(uint32_t n, uint32_t i);
-    bool SetSparseIndex(uint32_t n, uint32_t i, uint32_t v);
-    T GetSparseDataPoint(uint32_t n, uint32_t i);
-    bool SetSparseDataPoint(uint32_t n, uint32_t i, T v);
-};
 
 vector<NNDataSetBase*> LoadNetCDF(const string& fname);
 bool SaveNetCDF(const string& fname, vector<NNDataSetBase*> vDataset);

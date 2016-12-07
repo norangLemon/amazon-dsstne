@@ -13,6 +13,8 @@
 #ifndef KERNELS_H
 #define KERNELS_H
 
+#include "GpuTypes.h"
+
 // GPU kernel utilities
 uint32_t CalculateBlocks(uint64_t size);
 
