@@ -19,6 +19,7 @@
 #include<stdio.h>
 #include<cmath>
 
+#include "NNLayer.h"
 #include"NNRecsGenerator.h"
 #include "GpuTypes.h"
 #include "Utils.h"

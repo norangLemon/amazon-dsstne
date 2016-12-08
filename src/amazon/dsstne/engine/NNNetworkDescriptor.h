@@ -12,10 +12,12 @@
 #define NNNETWORK_DESCRIPTOR_H
 #ifndef __NVCC__
 
+#include <iostream>
 #include <string>
 
 #include "NNNetwork.h"
 
+using std::ostream;
 using std::string;
 
 struct NNNetworkDescriptor

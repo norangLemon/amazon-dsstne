@@ -25,6 +25,8 @@
 
 #include "GpuTypes.h"
 #include "NetCDFhelper.h"
+#include "NNDataSetBase.h"
+#include "NNNetwork.h"
 #include "NNTypes.h"
 #include "Utils.h"
 

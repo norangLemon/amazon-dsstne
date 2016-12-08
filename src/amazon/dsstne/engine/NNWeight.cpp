@@ -10,11 +10,16 @@
    or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
  */
 
-#include "GpuTypes.h"
-#include "NNTypes.h"
-#include "kernels.h"
+#include "NNWeight.h"
+
+#include <cuda.h>
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
+
+#include "GpuTypes.h"
+#include "NNLayer.h"
+#include "NNNetwork.h"
+#include "kernels.h"
 
 using namespace netCDF;
 using namespace netCDF::exceptions;

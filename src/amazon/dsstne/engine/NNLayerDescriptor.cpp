@@ -10,6 +10,7 @@
 
 #include "NNLayerDescriptor.h"
 
+#include <iomanip>
 #include <netcdf>
 
 using namespace netCDF;

@@ -12,13 +12,15 @@
 #define NNWEIGHT_DESCRIPTOR_H
 #ifndef __NVCC__
 
+#include <iostream>
 #include <string>
 #include <vector>
 
 #include "GpuTypes.h"
 
-using std::vector;
+using std::ostream;
 using std::string;
+using std::vector;
 
 struct NNWeightDescriptor
 {

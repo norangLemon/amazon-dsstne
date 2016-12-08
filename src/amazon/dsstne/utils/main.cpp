@@ -11,10 +11,17 @@
  */
 
 #include "GpuTypes.h"
+#include "NNDataSet.h"
+#include "NNDataSetBase.h"
+#include "NNLayer.h"
+#include "NNNetwork.h"
 #include "NNTypes.h"
+#include "GpuContext.h"
 #include <values.h>
+#include <vector>
 #include <sys/time.h>
 
+using std::vector;
 
 
 static const Mode mode = Mode::Training;

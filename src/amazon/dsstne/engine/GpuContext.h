@@ -11,6 +11,8 @@
 #ifndef GPU_CONTEXT_H
 #define GPU_CONTEXT_H
 
+#include <curand.h>
+
 #include "GpuTypes.h"
 
 struct GpuContext {

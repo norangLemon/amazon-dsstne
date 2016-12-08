@@ -13,6 +13,21 @@
 #ifndef NNWEIGHT_H
 #define NNWEIGHT_H
 
+#include <map>
+#include <netcdf>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include "GpuTypes.h"
+#include "NNTypes.h"
+
+class NNLayer;
+class NNNetwork;
+
+using std::string;
+using std::vector;
+
 class NNWeight {
 public:
     enum Transform

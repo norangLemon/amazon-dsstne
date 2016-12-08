@@ -18,6 +18,8 @@
 
 #include "GpuContext.h"
 #include "NNDataSetBase.h"
+#include "NNLayer.h"
+#include "kernels.h"
 
 using std::vector;
 using namespace netCDF;

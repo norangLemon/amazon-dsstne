@@ -16,11 +16,13 @@
 #include <vector>
 
 #include "GpuContext.h"
-#include "NNTypes.h"
+#include "GpuSort.h"
 
 using std::vector;
 
 class NNDataSetBase;
+class NNLayer;
+class NNWeight;
 struct NNLayerDescriptor;
 struct NNNetworkDescriptor;
 struct NNWeightDescriptor;

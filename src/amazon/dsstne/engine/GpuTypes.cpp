@@ -11,9 +11,12 @@
  */
 
 #include "GpuTypes.h"
-#include "NNTypes.h"
-#include "kernels.h"
 
+#include <vector>
+
+#include "GpuBuffer.h"
+
+using std::vector;
 
 void verifySGEMM(GpuBuffer<NNFloat>* pbA, GpuBuffer<NNFloat>* pbB, GpuBuffer<NNFloat>* pbC, uint32_t m, uint32_t k, uint32_t n)
 {
