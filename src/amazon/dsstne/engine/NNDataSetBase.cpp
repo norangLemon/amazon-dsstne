@@ -59,6 +59,11 @@ NNDataSetDimensions NNDataSetBase::GetDimensions()
     return dim;
 }
 
+uint32_t NNDataSetBase::GetExamples()
+{
+    return _examples;
+}
+
 bool SaveNetCDF(const string& fname, vector<NNDataSetBase*> vDataSet)
 {
     bool bResult                            = true;

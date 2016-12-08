@@ -614,6 +614,21 @@ bool NNWeight::WriteNetCDF(netCDF::NcFile& nc, uint32_t index, NNFloat* pWeight,
     return bResult;
 }
 
+NNFloat* NNWeight::GetWeightBuffer()
+{
+    return _pbWeight ? _pbWeight->_pDevData : NULL;
+}
+
+NNFloat* NNWeight::GetWeightGradientBuffer()
+{
+    return _pbWeightGradient ? _pbWeightGradient->_pDevData : NULL;
+}
+
+uint64_t NNWeight::GetBufferSize()
+{
+    return _size;
+}
+
 bool NNWeight::CopyWeights(NNWeight* pWeight)
 {
     bool bValid                 = true;

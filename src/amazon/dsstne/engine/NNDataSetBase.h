@@ -61,7 +61,7 @@ struct NNDataSetBase {
 
     NNDataSetBase();
     NNDataSetDimensions GetDimensions();
-    uint32_t GetExamples() { return _examples; };
+    uint32_t GetExamples();
 
     virtual bool SaveNetCDF(const string& fname) = 0;
     virtual bool WriteNetCDF(netCDF::NcFile& nfc, const string& fname, const uint32_t n) = 0;

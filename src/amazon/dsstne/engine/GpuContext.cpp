@@ -501,3 +501,13 @@ void GpuContext::GetMemoryUsage(int* gpuMemory, int* cpuMemory)
     return;
 }
 
+enum {
+    PADDING                     = 32,
+    PADDINGBITS                 = 5,
+    PADDINGMASK                 = 0xffffffff - (PADDING - 1),
+};
+
+unsigned int GpuContext::Pad(unsigned int x)
+{
+    return (x + PADDING - 1) & PADDINGMASK;
+}

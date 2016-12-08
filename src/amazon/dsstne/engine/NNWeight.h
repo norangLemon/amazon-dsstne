@@ -79,9 +79,9 @@ private:
     void RefreshState(NNNetwork* pNetwork, TrainingMode trainingMode);
     void UpdateWeights(TrainingMode trainingMode, uint32_t batch, NNFloat alpha, NNFloat lambda, NNFloat mu);
     bool WriteNetCDF(netCDF::NcFile& nc, uint32_t index, NNFloat* pWeight = NULL, NNFloat* pBias = NULL);
-    NNFloat* GetWeightBuffer() { return _pbWeight ? _pbWeight->_pDevData : NULL; }
-    NNFloat* GetWeightGradientBuffer() { return _pbWeightGradient ? _pbWeightGradient->_pDevData : NULL; }
-    uint64_t GetBufferSize() { return _size; }
+    NNFloat* GetWeightBuffer();
+    NNFloat* GetWeightGradientBuffer();
+    uint64_t GetBufferSize();
 public:
     bool CopyWeights(NNWeight* pWeight);
     bool SetNorm(NNFloat norm);

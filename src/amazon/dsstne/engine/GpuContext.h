@@ -20,12 +20,6 @@ struct GpuContext {
         SM_5X,
     };
 
-   enum {
-        PADDING                     = 32,
-        PADDINGBITS                 = 5,
-        PADDINGMASK                 = 0xffffffff - (PADDING - 1),
-    };
-
     // Memory parameters
     GpuData                             _data;                      // All GPU data accessible from kernels (mostly device memory pointers)
     bool                                _bECCSupport;               // Flag for ECC support to detect Tesla versus consumer GPU
@@ -79,7 +73,7 @@ struct GpuContext {
     void SetCPUValidate(bool bCPUValidate);
 
     // Static methods
-    static unsigned int Pad(unsigned int x) { return (x + PADDING - 1) & PADDINGMASK; }
+    static unsigned int Pad(unsigned int x);
 };
 
 extern struct GpuContext& getGpu();
