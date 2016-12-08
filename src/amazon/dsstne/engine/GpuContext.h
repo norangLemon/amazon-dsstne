@@ -12,8 +12,11 @@
 #define GPU_CONTEXT_H
 
 #include <curand.h>
+#include <memory>
 
 #include "GpuTypes.h"
+
+using std::unique_ptr;
 
 struct GpuContext {
     enum SM_VERSION
@@ -55,7 +58,7 @@ struct GpuContext {
 
     // Neural network parameters
     NNNetwork*                          _pNetwork;                  // Pointer to current neural network
-    GpuBuffer<unsigned long long int>*  _pbAccumulator;             // Pointer to per-kernel fix point accumulator
+    unique_ptr<GpuBuffer<unsigned long long int>> _pbAccumulator;   // Pointer to per-kernel fix point accumulator
     bool                                _bCPUValidate;              // Should CPU validate GPU calculations?
     float                               _acceptableError;           // Acceptable error between CPU and GPU
 
