@@ -12,6 +12,7 @@
 #define NNDATA_SET_BASE_H
 #ifndef __NVCC__
 
+#include <memory>
 #include <netcdf>
 #include <string>
 #include <vector>
@@ -21,6 +22,7 @@
 #include "NNTypes.h"
 
 using std::string;
+using std::unique_ptr;
 using std::vector;
 
 class NNLayer;
@@ -43,20 +45,20 @@ struct NNDataSetBase {
     uint32_t                    _maxSparseDatapoints;           // Maximum observed sparse datapoints per example
     NNFloat                     _sparseDensity;                 // Overall sparse density (0.0 - 1.0)
     vector<uint64_t>            _vSparseStart;                  // Vector of sparse datapoint starts per example
-    GpuBuffer<uint64_t>*        _pbSparseStart;                 // GPU copy of _vSparseStart
+    unique_ptr<GpuBuffer<uint64_t>> _pbSparseStart;             // GPU copy of _vSparseStart
     vector<uint64_t>            _vSparseEnd;                    // Vector of sparse datapoint ends per example
-    GpuBuffer<uint64_t>*        _pbSparseEnd;                   // GPU copy of _vSparseEnd
+    unique_ptr<GpuBuffer<uint64_t>> _pbSparseEnd;               // GPU copy of _vSparseEnd
     vector<uint32_t>            _vSparseIndex;                  // Vector of sparse indices
-    GpuBuffer<uint32_t>*        _pbSparseIndex;                 // GPU copy of _vSparseIndex
-    GpuBuffer<NNFloat>*         _pbDenoisingRandom;             // Denoising randoms
+    unique_ptr<GpuBuffer<uint32_t>> _pbSparseIndex;             // GPU copy of _vSparseIndex
+    unique_ptr<GpuBuffer<NNFloat>> _pbDenoisingRandom;          // Denoising randoms
 
     // Transposed sparse lookup for sparse backpropagation
     vector<uint64_t>            _vSparseDatapointCount;
     vector<uint32_t>            _vSparseTransposedStart;
     uint32_t                    _sparseTransposedIndices;
-    GpuBuffer<uint32_t>*        _pbSparseTransposedStart;
-    GpuBuffer<uint32_t>*        _pbSparseTransposedEnd;
-    GpuBuffer<uint32_t>*        _pbSparseTransposedIndex;
+    unique_ptr<GpuBuffer<uint32_t>> _pbSparseTransposedStart;
+    unique_ptr<GpuBuffer<uint32_t>> _pbSparseTransposedEnd;
+    unique_ptr<GpuBuffer<uint32_t>> _pbSparseTransposedIndex;
 
     // States
     bool                        _bDenoising;
