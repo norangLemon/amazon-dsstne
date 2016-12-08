@@ -58,7 +58,7 @@ private:
     bool CalculateSparseTransposedDenoisedMatrix(uint32_t position, uint32_t batch, NNLayer* pLayer);
     bool CalculateSparseTransposedWeightGradient(NNFloat alpha, NNFloat beta, uint32_t m, uint32_t n, NNFloat* pDelta, NNFloat* pWeightGradient);
     bool SetDenoising(bool flag);
-    bool GenerateDenoisingData();
+    void GenerateDenoisingData();
     bool LoadInputUnit(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit);
     bool LoadSparseInputUnit(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit);
     bool LoadSparseDenoisedInputUnit(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit);
@@ -755,7 +755,7 @@ template<typename T> bool NNDataSet<T>::SetDenoising(bool flag)
     return true;
 }
 
-template<typename T> bool NNDataSet<T>::GenerateDenoisingData()
+template<typename T> void NNDataSet<T>::GenerateDenoisingData()
 {
     if (!(_attributes & NNDataSetEnums::Sparse))
     {
@@ -763,10 +763,8 @@ template<typename T> bool NNDataSet<T>::GenerateDenoisingData()
         {
             printf("NNDataSet::GenerateDenoisingData: Attempt to generate denoising randoms on non-sparse data set.\n");
         }
-        return false;
     }
     curandGenerateUniform(getGpu()._RNG, _pbDenoisingRandom->_pDevData, _vSparseIndex.size());
-    return true;
 }
 
 static MPI_Datatype getMPIDataType(NNDataSetEnums::DataType datatype)
