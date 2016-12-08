@@ -12,11 +12,18 @@
 #define NNDATA_SET_BASE_H
 #ifndef __NVCC__
 
+#include <netcdf>
 #include <string>
+#include <vector>
 
+#include "GpuTypes.h"
+#include "NNEnum.h"
 #include "NNTypes.h"
 
 using std::string;
+using std::vector;
+
+class NNLayer;
 
 struct NNDataSetBase {
     string                      _name;                          // Dataset name

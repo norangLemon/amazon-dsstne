@@ -11,8 +11,9 @@
 #ifndef GPU_BUFFER_H
 #define GPU_BUFFER_H
 
+#include <cstring>
+
 #include "GpuContext.h"
-#include "GpuTypes.h"
 
 template <typename T>
 struct GpuBuffer

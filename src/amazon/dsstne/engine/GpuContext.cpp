@@ -11,10 +11,10 @@
 #include "GpuContext.h"
 
 #include <limits>
+#include <unistd.h>
 
 #include "GpuBuffer.h"
-#include "GpuTypes.h"
-#include "kernels.h"
+#include "NNNetwork.h"
 
 static GpuContext gpu;
 GpuContext& getGpu() { return gpu; }

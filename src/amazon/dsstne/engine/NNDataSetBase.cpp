@@ -10,8 +10,7 @@
 
 #include "NNDataSetBase.h"
 
-#include <netcdf>
-
+#include "GpuContext.h"
 #include "NNDataSet.h"
 
 using namespace netCDF;

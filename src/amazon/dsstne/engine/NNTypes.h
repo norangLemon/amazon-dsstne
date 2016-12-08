@@ -12,28 +12,16 @@
 
 #ifndef NNTYPES_H
 #define NNTYPES_H
-#include <vector>
-#include <set>
 
 #include <string>
 #include <iostream>
-#include <iomanip>
-#include <fstream>
-#include <algorithm>
-#include <netcdf>
-#ifndef __NVCC__
-#include <tuple>
-#include <json/json.h>
-#endif
-#include <sys/time.h>
-#include <cmath>
+
+#include "NNEnum.h"
 
 using std::ostream;
+using std::string;
 
 class NNDataSetBase;
-class NNLayer;
-class NNNetwork;
-class NNWeight;
 
 // Activates step by step CPU validation
 #define VALIDATION
@@ -128,14 +116,6 @@ enum PoolingFunction {
 };
 
 ostream& operator<< (ostream& out, const PoolingFunction& p);
-
-#include "kernels.h"
-#include "GpuSort.h"
-#include "NNEnum.h"
-#include "NNWeight.h"
-#include "NNLayer.h"
-#include "NNNetwork.h"
-
 
 int MPI_Bcast_string(string& s);
 

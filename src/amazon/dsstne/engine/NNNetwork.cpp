@@ -10,19 +10,28 @@
    or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
  */
 
+#include "NNNetwork.h"
+
+#include <algorithm>
+#include <cfloat>
+#include <fstream>
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
+#ifndef __NVCC__
+#include <json/json.h>
+#endif
+#include <queue>
+#include <set>
+#include <sys/time.h>
+
 #include "GpuTypes.h"
 #include "NNDataSetBase.h"
 #include "NNLayerDescriptor.h"
 #include "NNNetworkDescriptor.h"
-#include "NNTypes.h"
+#include "NNWeight.h"
 #include "NNWeightDescriptor.h"
-#include "kernels.h"
 #include "Utils.h"
-#define __STDC_FORMAT_MACROS
-#include <inttypes.h>
-#include <queue>
-#include <set>
-#include <cfloat>
+#include "kernels.h"
 
 using namespace netCDF;
 using namespace netCDF::exceptions;

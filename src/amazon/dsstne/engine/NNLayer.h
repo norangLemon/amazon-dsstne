@@ -15,9 +15,12 @@
 #ifndef __NVCC__
 
 #include <map>
+#include <netcdf>
 
+#include "GpuBuffer.h"
 #include "NNTypes.h"
 
+class NNWeight;
 struct NNLayerDescriptor;
 
 class NNLayer {

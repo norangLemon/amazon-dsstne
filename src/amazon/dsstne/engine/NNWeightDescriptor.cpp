@@ -10,8 +10,10 @@
 
 #include "NNWeightDescriptor.h"
 
+#include <mpi.h>
 #include <netcdf>
 
+#include "GpuContext.h"
 #include "NNTypes.h"
 
 using namespace netCDF;

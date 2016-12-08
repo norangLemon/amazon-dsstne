@@ -13,19 +13,11 @@
 #ifndef __GPUTYPES_H__
 #define __GPUTYPES_H__
 #include <stdio.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/ipc.h>
-#include <sys/shm.h>
 #include <cuda.h>
 #include <cublas_v2.h>
-#include <curand.h>
 #include <cudnn.h>
-#include <vector_functions.h>
 #include <cuda_runtime_api.h>
 #include <builtin_types.h>
-#include <cstring>
-#include <cstdint>
 #include <assert.h>
 #include <mpi.h>
 

@@ -27,6 +27,8 @@
 #include "Utils.h"
 #include "Filters.h"
 #include "GpuTypes.h"
+#include "NNDataSetBase.h"
+#include "NNLayer.h"
 #include "NNTypes.h"
 #include "NNRecsGenerator.h"
 #include "NetCDFhelper.h"

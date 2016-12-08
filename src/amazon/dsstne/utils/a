@@ -1,0 +1,42 @@
+main.cpp: In function ‘int main(int, char**)’:
+main.cpp:108:41: error: invalid use of incomplete type ‘class NNLayer’
+         tie(Nx, Ny, Nz, Nw)     = pLayer->GetLocalDimensions();
+                                         ^
+In file included from main.cpp:14:0:
+../engine/NNDataSetBase.h:26:7: error: forward declaration of ‘class NNLayer’
+ class NNLayer;
+       ^
+main.cpp:140:9: error: ‘NNDataSet’ was not declared in this scope
+         NNDataSet<NNFloat>* pInputDataSet   = (NNDataSet<NNFloat>*)vDataSet[inputIndex];
+         ^
+main.cpp:140:26: error: expected primary-expression before ‘>’ token
+         NNDataSet<NNFloat>* pInputDataSet   = (NNDataSet<NNFloat>*)vDataSet[inputIndex];
+                          ^
+main.cpp:140:29: error: ‘pInputDataSet’ was not declared in this scope
+         NNDataSet<NNFloat>* pInputDataSet   = (NNDataSet<NNFloat>*)vDataSet[inputIndex];
+                             ^
+main.cpp:140:65: error: expected primary-expression before ‘>’ token
+         NNDataSet<NNFloat>* pInputDataSet   = (NNDataSet<NNFloat>*)vDataSet[inputIndex];
+                                                                 ^
+main.cpp:140:67: error: expected primary-expression before ‘)’ token
+         NNDataSet<NNFloat>* pInputDataSet   = (NNDataSet<NNFloat>*)vDataSet[inputIndex];
+                                                                   ^
+main.cpp:140:68: error: expected ‘;’ before ‘vDataSet’
+         NNDataSet<NNFloat>* pInputDataSet   = (NNDataSet<NNFloat>*)vDataSet[inputIndex];
+                                                                    ^
+main.cpp:141:26: error: expected primary-expression before ‘>’ token
+         NNDataSet<NNFloat>* pOutputDataSet  = (NNDataSet<NNFloat>*)vDataSet[outputIndex];
+                          ^
+main.cpp:141:29: error: ‘pOutputDataSet’ was not declared in this scope
+         NNDataSet<NNFloat>* pOutputDataSet  = (NNDataSet<NNFloat>*)vDataSet[outputIndex];
+                             ^
+main.cpp:141:65: error: expected primary-expression before ‘>’ token
+         NNDataSet<NNFloat>* pOutputDataSet  = (NNDataSet<NNFloat>*)vDataSet[outputIndex];
+                                                                 ^
+main.cpp:141:67: error: expected primary-expression before ‘)’ token
+         NNDataSet<NNFloat>* pOutputDataSet  = (NNDataSet<NNFloat>*)vDataSet[outputIndex];
+                                                                   ^
+main.cpp:141:68: error: expected ‘;’ before ‘vDataSet’
+         NNDataSet<NNFloat>* pOutputDataSet  = (NNDataSet<NNFloat>*)vDataSet[outputIndex];
+                                                                    ^
+make: *** [main.o] Error 1

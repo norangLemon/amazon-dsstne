@@ -12,12 +12,14 @@
 #define NNLAYER_DESCRIPTOR_H
 #ifndef __NVCC__
 
+#include <iostream>
 #include <string>
 #include <vector>
 
 #include "GpuTypes.h"
 #include "NNLayer.h"
 
+using std::ostream;
 using std::vector;
 using std::string;
 
