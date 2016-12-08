@@ -33,14 +33,14 @@ _sparseTransposedIndices(0),
 _maxSparseDatapoints(0),
 _sparseDensity(0),
 _bDenoising(false),
-_pbSparseStart(NULL),
-_pbSparseEnd(NULL),
-_pbSparseIndex(NULL),
-_pbSparseTransposedStart(NULL),
-_pbSparseTransposedEnd(NULL),
-_pbSparseTransposedIndex(NULL),
+_pbSparseStart(),
+_pbSparseEnd(),
+_pbSparseIndex(),
+_pbSparseTransposedStart(),
+_pbSparseTransposedEnd(),
+_pbSparseTransposedIndex(),
 _batch(0),
-_pbDenoisingRandom(NULL),
+_pbDenoisingRandom(),
 _bDirty(true)
 {
 
@@ -214,34 +214,34 @@ vector<NNDataSetBase*> LoadNetCDF(const string& fname)
     for (int i = 0; i < vDataType.size(); i++)
     {
 
-        NNDataSetBase* pDataSet             = NULL;
+        unique_ptr<NNDataSetBase> pDataSet;
         if (getGpu()._id == 0)
             cout << "LoadNetCDF: Loading " << vDataType[i] << " data set" << endl;
         switch (vDataType[i])
         {
             case NNDataSetEnums::UInt:
-                pDataSet                    = new NNDataSet<uint32_t>(fname, i);
+                pDataSet.reset(new NNDataSet<uint32_t>(fname, i));
                 break;
 
             case NNDataSetEnums::Int:
-                pDataSet                    = new NNDataSet<long>(fname, i);
+                pDataSet.reset(new NNDataSet<long>(fname, i));
                 break;
 
             case NNDataSetEnums::Float:
-                pDataSet                    = new NNDataSet<float>(fname, i);
+                pDataSet.reset(new NNDataSet<float>(fname, i));
                 break;
 
             case NNDataSetEnums::Double:
-                pDataSet                    = new NNDataSet<double>(fname, i);
+                pDataSet.reset(new NNDataSet<double>(fname, i));
                 break;
 
             case NNDataSetEnums::Char:
-                pDataSet                    = new NNDataSet<char>(fname, i);
+                pDataSet.reset(new NNDataSet<char>(fname, i));
                 break;
 
             case NNDataSetEnums::UChar:
             case NNDataSetEnums::RGB8:
-                pDataSet                    = new NNDataSet<uint8_t>(fname, i);
+                pDataSet.reset(new NNDataSet<uint8_t>(fname, i));
                 break;
 
             default:
@@ -249,7 +249,7 @@ vector<NNDataSetBase*> LoadNetCDF(const string& fname)
                 getGpu().Shutdown();
                 exit(-1);
         }
-        vDataSet.push_back(pDataSet);
+        vDataSet.push_back(pDataSet.release());
     }
 
     return vDataSet;
