@@ -15,7 +15,7 @@
 #include <map>
 #include <vector>
 
-#include "GpuTypes.h"
+#include "GpuContext.h"
 #include "NNTypes.h"
 
 using std::vector;

@@ -16,6 +16,7 @@
 #include <netcdf>
 #include <vector>
 
+#include "GpuContext.h"
 #include "NNDataSetBase.h"
 
 using std::vector;

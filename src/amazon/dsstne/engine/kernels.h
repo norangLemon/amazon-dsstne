@@ -14,6 +14,7 @@
 #define KERNELS_H
 
 #include "GpuTypes.h"
+#include "NNTypes.h"
 
 // GPU kernel utilities
 uint32_t CalculateBlocks(uint64_t size);
