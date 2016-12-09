@@ -1,0 +1,9 @@
+*.dsstne
+*.nc
+*.samplesIndex
+features_input
+features_output
+predictions
+*-ubyte
+train_samples_index
+test_samples_index
