@@ -185,11 +185,6 @@ public:
     tuple<uint32_t, uint32_t, uint32_t, uint32_t> GetLocalDimensions();
     tuple<uint32_t, uint32_t, uint32_t> GetKernelDimensions();
     tuple<uint32_t, uint32_t, uint32_t> GetKernelStride();
-    //NNFloat GetPDropout();
-    //NNFloat GetWeightNorm();
-    //NNFloat GetDeltaNorm();
-    //bool SetWeightNorm(NNFloat norm);
-    //bool SetDeltaNorm(NNFloat norm);
 
     const string& Name() const;
     const string& DataSet() const;

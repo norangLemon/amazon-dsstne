@@ -749,11 +749,6 @@ void NNLayer::ForwardPropagateFullyConnected(uint32_t position, uint32_t batch, 
             // Apply dropout if active
             if (bTraining && (_pDropout > (NNFloat)0.0))
                 CalculateDropout(batch);             
-       
-#if 0
-        string fname = "activation_" + _name;
-        Dump(fname, _pbUnit->_pDevData);
-#endif              
         }       
     }
     else
@@ -824,7 +819,6 @@ void NNLayer::ForwardPropagateFullyConnected(uint32_t position, uint32_t batch, 
                     // Accumulate subsequent calculations if active
                     sgemm_beta                      = (NNFloat)1.0;
                 }
-                //printf("FP %s IL UC %d\n", _name.c_str(), _unitUpdateCount);
 
                 // Reduce output
                 Reduce(batch, _stride, _pbUnit->_pDevData, _localStride, _unitUpdateCount);
@@ -880,12 +874,7 @@ void NNLayer::ForwardPropagateFullyConnected(uint32_t position, uint32_t batch, 
             if (bTraining && (_pDropout > (NNFloat)0.0))
                 CalculateDropout(batch);  
         }
-        
 
-#if 0
-        string fname = "activation_" + _name;
-        Dump(fname, _pbUnit->_pDevData);
-#endif                                      
         // Circulate activations to outgoing larger layers
         if (_vOutgoingLargerLayer.size() > 0)
         {  
@@ -955,34 +944,11 @@ void NNLayer::ForwardPropagateFullyConnected(uint32_t position, uint32_t batch, 
                     }
                         
                     // Increment unit update count
-                   // printf("FP %s OL UC %d\n", _name.c_str(), pOutputLayer->_unitUpdateCount);
                     pOutputLayer->_unitUpdateCount++;
                 }
             }
         }
     }
-    
-#if 0
-    // REMOVE
-    _pbUnit->Download(_vUnit.data());
-    MPI_Barrier(MPI_COMM_WORLD);
-    if (getGpu()._id == 0)
-        cout << _name << " ";
-    MPI_Barrier(MPI_COMM_WORLD);
-    for (int i = 0; i < getGpu()._numprocs; i++)
-    {
-        if (i == getGpu()._id)
-        {
-            for (auto f : _vUnit)
-                printf("%8.4f ", f);
-            printf("\n");
-            fflush(stdout);
-        }
-        MPI_Barrier(MPI_COMM_WORLD);
-    }
-    cout << endl;
-    exit(-1);
-#endif    
 }
 
 
@@ -1488,14 +1454,6 @@ void NNLayer::BackPropagateFullyConnected(uint32_t position, uint32_t batch, NNF
             }
         }
 
-#if 0
-        if (_kind == Hidden)
-        {
-            string fname = "delta_" + _name;
-            Dump(fname, _pbDelta->_pDevData);
-        }
-#endif 
-        
         // Cycle through incoming layers and process gradient and delta contributions
         for (uint32_t i = 0; i < _vIncomingLayer.size(); i++)
         {
@@ -1677,7 +1635,6 @@ void NNLayer::BackPropagateFullyConnected(uint32_t position, uint32_t batch, NNF
                     getGpu().Shutdown();
                     exit(-1);
                 }
-                //printf("BP %s OL UW %d\n", _name.c_str(), pSrcWeight->_updateCount);
 
                 // Increment update count
                 pSrcWeight->_updateCount++;
@@ -1725,31 +1682,9 @@ void NNLayer::BackPropagateFullyConnected(uint32_t position, uint32_t batch, NNF
                     getGpu().Shutdown();
                     exit(-1);
                 }
-#if 0
-                NNFloat* pD = pOutputLayer->_vDelta.data();
-                NNFloat* pW = _vOutgoingWeight[i]->_vWeight.data();
-                
-                pOutputLayer->_pbDelta->Download(pD);
-                _vOutgoingLargerWeight[i]->_pbWeight->Download(pW);
-                pW += pOutputLayer->_localStride;
-                NNFloat sum = 0.0f;
-                for (int j = 0; j < pOutputLayer->_localStride; j++)
-                {
-                    sum += (*pD) * (*pW);
-                    pD++;
-                    pW++;
-                }
-                MPI_Allreduce(MPI_IN_PLACE, &sum, 1, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
-                if (getGpu()._id == 0)
-                    printf("ZAG %16.12f\n", sum);
-                MPI_Barrier(MPI_COMM_WORLD);  
-#endif
-                        
                 // Add subsequent layers
                 sgemm_beta                      = (NNFloat)1.0;
             }
-
-            //printf("BP %s OL UD %d\n", _name.c_str(), _deltaUpdateCount);
 
             // Reduce Delta(L)
             Reduce(batch, _stride, _pbDelta->_pDevData, _localStride, _deltaUpdateCount);
@@ -1854,8 +1789,6 @@ void NNLayer::BackPropagateFullyConnected(uint32_t position, uint32_t batch, NNF
                     }
                 }
 
-                //printf("BP %s IL UW %d\n", _name.c_str(), pSrcWeight->_updateCount);
-                
                 // Increment update count
                 pSrcWeight->_updateCount++;
                
@@ -1896,40 +1829,11 @@ void NNLayer::BackPropagateFullyConnected(uint32_t position, uint32_t batch, NNF
                         exit(-1);
                     }
 
-                    //printf("BP %s IL UD %d\n", _name.c_str(), pInputLayer->_deltaUpdateCount);
                     pInputLayer->_deltaUpdateCount++;
                 }
             }
         }
     }
-    
-    
-#if 0
-    // Dump weight gradient
-    NNWeight* pWeight                       = _vIncomingWeight[0];
-    vector<NNFloat> vLocalWeightGradient(pWeight->_size);
-    pWeight->_pbWeightGradient->Download(vLocalWeightGradient.data());
-    for (int i = 0; i < getGpu()._numprocs; i++)
-    {
-        if (i == getGpu()._id)
-        {
-            uint32_t count = 0;
-            while (count < pWeight->_size)
-            {
-                for (int j = 0; j < pWeight->_outputLayer._stride; j++)
-                {
-                    printf("%8.4f ", vLocalWeightGradient[count++]);
-                }
-                printf("\n");
-           }
-        }
-        MPI_Barrier(MPI_COMM_WORLD);
-    }   
-    if (getGpu()._id == 0)
-        cout << endl;
-    //getGpu().Shutdown();
-    //exit(-1);
-#endif   
 }
 
 // Reduces contributions from all GPUs to local component of X(L) or Delta(L)
@@ -1991,33 +1895,6 @@ void NNLayer::Reduce(uint32_t batch, uint32_t stride, NNFloat* pBuffer, uint32_t
         {
             kCopy2D(pBuffer, localStride, pSendBuffer + minX, stride, span, batch);
         }
-
-#if 0             
-        MPI_Barrier(MPI_COMM_WORLD
-       
-        vector<NNFloat> vOut(16 * 16);
-        cudaMemcpy(vOut.data(), pBuffer, batch * localStride * sizeof(NNFloat), cudaMemcpyDefault);
-        for (int n = 0; n < getGpu()._numprocs; n++)
-        {
-            if (getGpu()._id == n)
-            {
-                for (int i = 0; i < batch; i++)
-                {
-                    printf("%2d ", i);
-                    for (int j = 0; j < localStride; j++)
-                    {
-                        printf("%8.6f ", vOut[i * localStride + j]);
-                    }
-                    printf("\n");
-                }
-                printf("\n");
-                fflush(stdout);
-            }
-            
-            MPI_Barrier(MPI_COMM_WORLD);
-        } 
-        exit(-1);  
-#endif
     }
 }
 
@@ -2080,24 +1957,6 @@ void NNLayer::Gather(uint32_t batch, uint32_t stride, NNFloat* pBuffer, uint32_t
             status                                     = cudaMemcpyAsync(pSendBuffer, pCPUBuffer, batch * stride * sizeof(NNFloat), cudaMemcpyDefault);
             RTERROR(status, "NNLayer::Gather: cudaMemcpy upload failed");
         }
-#if 0
-        if (getGpu()._id == 0)
-        {
-            vector<NNFloat> vOut(16 * 16);
-            cudaMemcpy(vOut.data(), pSendBuffer, 16 * 16 * sizeof(NNFloat), cudaMemcpyDefault);
-            for (int i = 0; i < 16; i++)
-            {
-                printf("%2d ", i);
-                for (int j = 0; j < 16; j++)
-                {
-                    printf("%8.6f ", vOut[i * 16 + j]);
-                }
-                printf("\n");
-            }
-        }
-        MPI_Barrier(MPI_COMM_WORLD);
-        exit(-1);
-#endif
     }
 }
 

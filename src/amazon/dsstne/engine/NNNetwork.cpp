@@ -1509,25 +1509,6 @@ NNFloat NNNetwork::Train(uint32_t epochs, NNFloat alpha, NNFloat lambda, NNFloat
                 BackPropagate(alpha);         
                 UpdateWeights(step_alpha, lambda, mu);
             }
-
-#if 0
-            static const int WSIZE = 32;
-            if (getGpu()._id == 0)
-            {
-                vector<NNFloat> vGrad(WSIZE);
-                for (auto w : _vWeight)
-                {
-                    cudaMemcpy(vGrad.data(), w->_pbWeight->_pDevData, WSIZE * sizeof(NNFloat), cudaMemcpyDefault);
-                    printf("WG %s %s\n", w->_inputLayer._name.c_str(), w->_outputLayer._name.c_str());
-                    for (int i = 0; i < WSIZE; i++)
-                        printf("%10.6f ", vGrad[i]);
-                    printf("\n");
-                }
-            }
-            MPI_Barrier(MPI_COMM_WORLD);
-#endif
-           //getGpu().Shutdown();
-           //exit(-1);
         }
         timeval t1;
         gettimeofday(&t1, NULL);
@@ -2132,14 +2113,10 @@ void CalculateConvolutionLayerDimensions(NNNetworkDescriptor& d)
                             break;   
                     }
                 }
-
-                //printf("L %s: %d | %d %d %d %d\n", pL->_name.c_str(), pL->_dimensions, pL->_Nx, pL->_Ny, pL->_Nz, pL->_Nw);
-                
             }
         }
     }
     while (!bFinished);
-    //exit(-1);
 }
 
 void NNNetwork::CalculatePropagationOrder()
@@ -2201,8 +2178,6 @@ void NNNetwork::CalculatePropagationOrder()
         _vFPOrder.push_back(p);
     }
     sort(_vFPOrder.begin(), _vFPOrder.end(), CompareLayer());
-    //for (auto p : _vFPOrder)
-    //    cout << p->_name << endl;
     
     // Initialize BP priorities
     for (const auto& p : _vLayer)
@@ -2250,9 +2225,6 @@ void NNNetwork::CalculatePropagationOrder()
     }
     
     sort(_vBPOrder.begin(), _vBPOrder.end(), CompareLayer());
-    //for (auto p : _vBPOrder)
-    //    cout << p->_name << endl;
-    //exit(-1);
 }
 
 
@@ -2323,22 +2295,6 @@ bool NNNetwork::Validate()
     initial_error                                           = initial_error_training + initial_error_regularization;
     printf("Initial Error: %20.10f %20.10f\n", initial_error_training, initial_error_regularization);
 
-#if 0
-    {
-        PredictValidationBatch();
-        NNFloat new_error_training, new_error_regularization, new_error;
-        tie(new_error_training, 
-        new_error_regularization)                           = CalculateError(lambda);
-        new_error                                           = new_error_training + new_error_regularization;
-
-
-        printf("Initial %f %f %f\n", initial_error, initial_error_training, initial_error_regularization);
-        printf("New     %f %f %f\n", new_error, new_error_training, new_error_regularization);
-        getGpu().Shutdown();
-        exit(-1);
-    }
-#endif
-    
     // Calculate initial gradients
     BackPropagate(alpha);
 
@@ -2359,8 +2315,6 @@ bool NNNetwork::Validate()
     {
       const float alpha_u = 1*_batch; // because it is normalized later
       const float lambda_u = 0;
-      // with (lambda = 0) w = w + g
-      // b = b + g*alpha_u/batch
       UpdateWeights(alpha_u, lambda_u, mu);
     }
 
@@ -3052,16 +3006,6 @@ NNNetwork* LoadNeuralNetworkJSON(const string& fname, const uint32_t batch, cons
                                 if (lname.compare("source") == 0)
                                 {
                                     uint32_t size       = lvalue.isArray() ? lvalue.size() : 1;
-                                    
-                                    // MaxPooling and LRN layers can only have one source
-#if 0                                    
-                                    if ((ldl._type == NNLayer::Type::Pooling) && (size > 1))
-                                    {
-                                            printf("LoadNeuralNetworkJSON: Pooling layer %s has multiple sources\n", ldl._name.c_str());
-                                            bValid                  = false;
-                                            goto exit;
-                                    }
-#endif
                                     
                                     for (uint32_t j = 0; j < size; j++)
                                     {

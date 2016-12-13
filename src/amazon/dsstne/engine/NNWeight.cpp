@@ -527,14 +527,6 @@ void NNWeight::UpdateWeights(TrainingMode trainingMode, uint32_t batch, NNFloat 
                 break;                 
         }       
     }
-#if 0
-        if (_width < 1024)
-        {
-            _pbBias->Download(&_vBias[0]);
-            for (int i = 0; i < _width; i++)
-                printf("%3d %16.8f\n", i, _vBias[i]);
-        }
-#endif
           
     // and only do so after all updates have been applied    
     if ((_norm > (NNFloat)0.0) && (!_bShared))
@@ -583,12 +575,6 @@ bool NNWeight::WriteNetCDF(netCDF::NcFile& nc, uint32_t index, NNFloat* pWeight,
         }
         else
         {
-
-#if 0
-        printf("Weights %d %lu %lu\n", index, _vWeight.size(), _vBias.size());
-        for (int i = 0; i < 20; i++)
-            printf("%3d %16.8f %16.8f\n", i, _vWeight[i], _vBias[i]);
-#endif
             NcDim weightDim     = nc.addDim(wstring + "weightDim", _size);            
             NcVar weightVar     = nc.addVar(wstring + "weights", ncFloat, weightDim);            
             if (!pWeight)
