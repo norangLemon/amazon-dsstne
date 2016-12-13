@@ -132,20 +132,21 @@ kCalculateSparseOnlyNonZeroL1Error_kernel(uint32_t position, uint32_t batch, uin
 
 void kCalculateSparseL1Error(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, uint64_t* pSparseStart, uint64_t *pSparseEnd, uint32_t *pSparseIndex, bool bSparseIgnoreZero)
 {
+    auto stream = getGpu().getStream();
     if (bSparseIgnoreZero)
     {
 		uint32_t blocks             = CalculateBlocks(batch * getGpu()._warpSize);    
-		kCalculateSparseOnlyNonZeroL1Error_kernel<<<blocks, getGpu()._threadsPerBlock>>>(position, batch, stride, pUnit, pSparseStart, pSparseEnd, pSparseIndex);
+		kCalculateSparseOnlyNonZeroL1Error_kernel<<<blocks, getGpu()._threadsPerBlock, 0, stream>>>(position, batch, stride, pUnit, pSparseStart, pSparseEnd, pSparseIndex);
 		LAUNCHERROR("kCalculateSparseOnlyNonZeroL1Error_kernel");    
     }
     else
     {
 		uint64_t size               = (uint64_t)batch * (uint64_t)stride;
 		uint32_t blocks             = CalculateBlocks(size);    
-		kCalculateSparseRawL1Error_kernel<<<blocks, getGpu()._threadsPerBlock>>>(pUnit, size);
+		kCalculateSparseRawL1Error_kernel<<<blocks, getGpu()._threadsPerBlock, 0, stream>>>(pUnit, size);
 		LAUNCHERROR("kCalculateSparseRawL1Error_kernel");
 		blocks                      = CalculateBlocks(batch * getGpu()._warpSize);
-		kCalculateSparseNonZeroL1Error_kernel<<<blocks, getGpu()._threadsPerBlock>>>(position, batch, stride, pUnit, pSparseStart, pSparseEnd, pSparseIndex);
+		kCalculateSparseNonZeroL1Error_kernel<<<blocks, getGpu()._threadsPerBlock, 0, stream>>>(position, batch, stride, pUnit, pSparseStart, pSparseEnd, pSparseIndex);
 		LAUNCHERROR("kCalculateSparseNonZeroL1Error_kernel");
 	}
 }
@@ -317,20 +318,21 @@ kCalculateSparseAnalogNonZeroL1Error_kernel(uint32_t position, uint32_t batch, u
 template<typename T>
 void kCalculateSparseAnalogL1Error(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, uint64_t* pSparseStart, uint64_t *pSparseEnd, uint32_t *pSparseIndex, T* pSparseData, bool bSparseIgnoreZero)
 {
+    auto stream = getGpu().getStream();
     if (bSparseIgnoreZero)
     {
 		uint32_t blocks         = CalculateBlocks(batch * getGpu()._warpSize);    
- 		kCalculateSparseAnalogOnlyNonZeroL1Error_kernel<<<blocks, getGpu()._threadsPerBlock>>>(position, batch, stride, pUnit, pSparseStart, pSparseEnd, pSparseIndex, pSparseData);
+        kCalculateSparseAnalogOnlyNonZeroL1Error_kernel<<<blocks, getGpu()._threadsPerBlock, 0, stream>>>(position, batch, stride, pUnit, pSparseStart, pSparseEnd, pSparseIndex, pSparseData);
 		LAUNCHERROR("kCalculateSparseAnalogOnlyNonZeroL1Error_kernel");   
     }
     else
     {
 		uint64_t size           = (uint64_t)batch * (uint64_t)stride;
 		uint32_t blocks         = CalculateBlocks(size);    
-		kCalculateSparseRawL1Error_kernel<<<blocks, getGpu()._threadsPerBlock>>>(pUnit, size);
+		kCalculateSparseRawL1Error_kernel<<<blocks, getGpu()._threadsPerBlock, 0, stream>>>(pUnit, size);
 		LAUNCHERROR("kCalculateSparseRawL1Error_kernel");
 		blocks                  = CalculateBlocks(batch * getGpu()._warpSize);
-		kCalculateSparseAnalogNonZeroL1Error_kernel<<<blocks, getGpu()._threadsPerBlock>>>(position, batch, stride, pUnit, pSparseStart, pSparseEnd, pSparseIndex, pSparseData);
+		kCalculateSparseAnalogNonZeroL1Error_kernel<<<blocks, getGpu()._threadsPerBlock, 0, stream>>>(position, batch, stride, pUnit, pSparseStart, pSparseEnd, pSparseIndex, pSparseData);
 		LAUNCHERROR("kCalculateSparseAnalogNonZeroL1Error_kernel");
 	}
 }
@@ -403,20 +405,21 @@ kCalculateSparseNonZeroL2Error_kernel(uint32_t position, uint32_t batch, uint32_
 
 void kCalculateSparseL2Error(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, uint64_t* pSparseStart, uint64_t *pSparseEnd, uint32_t *pSparseIndex, bool bSparseIgnoreZero)
 {
+    auto stream = getGpu().getStream();
     if (bSparseIgnoreZero)
     {
 		uint32_t blocks         = CalculateBlocks(batch * getGpu()._warpSize);    
-		kCalculateSparseOnlyNonZeroL2Error_kernel<<<blocks, getGpu()._threadsPerBlock>>>(position, batch, stride, pUnit, pSparseStart, pSparseEnd, pSparseIndex);
+		kCalculateSparseOnlyNonZeroL2Error_kernel<<<blocks, getGpu()._threadsPerBlock, 0, stream>>>(position, batch, stride, pUnit, pSparseStart, pSparseEnd, pSparseIndex);
 		LAUNCHERROR("kCalculateSparseOnlyNonZeroL2Error_kernel");    
     }
     else
     {
 		uint64_t size           = batch * stride;
 		uint32_t blocks         = CalculateBlocks(size);    
-		kCalculateSparseRawL2Error_kernel<<<blocks, getGpu()._threadsPerBlock>>>(pUnit, size);
+		kCalculateSparseRawL2Error_kernel<<<blocks, getGpu()._threadsPerBlock, 0, stream>>>(pUnit, size);
 		LAUNCHERROR("kCalculateSparseRawL2Error_kernel");
 		blocks                  = CalculateBlocks(batch * getGpu()._warpSize);
-		kCalculateSparseNonZeroL2Error_kernel<<<blocks, getGpu()._threadsPerBlock>>>(position, batch, stride, pUnit, pSparseStart, pSparseEnd, pSparseIndex);
+		kCalculateSparseNonZeroL2Error_kernel<<<blocks, getGpu()._threadsPerBlock, 0, stream>>>(position, batch, stride, pUnit, pSparseStart, pSparseEnd, pSparseIndex);
 		LAUNCHERROR("kCalculateSparseNonZeroL2Error_kernel");
 	}
 }
@@ -587,20 +590,21 @@ kCalculateSparseAnalogNonZeroL2Error_kernel(uint32_t position, uint32_t batch, u
 template<typename T>
 void kCalculateSparseAnalogL2Error(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, uint64_t* pSparseStart, uint64_t *pSparseEnd, uint32_t *pSparseIndex, T* pSparseData, bool bSparseIgnoreZero)
 {
+    auto stream = getGpu().getStream();
     if (bSparseIgnoreZero)
     {
 		uint32_t blocks         = CalculateBlocks(batch * getGpu()._warpSize);
-		kCalculateSparseAnalogOnlyNonZeroL2Error_kernel<<<blocks, getGpu()._threadsPerBlock>>>(position, batch, stride, pUnit, pSparseStart, pSparseEnd, pSparseIndex, pSparseData);
+		kCalculateSparseAnalogOnlyNonZeroL2Error_kernel<<<blocks, getGpu()._threadsPerBlock, 0, stream>>>(position, batch, stride, pUnit, pSparseStart, pSparseEnd, pSparseIndex, pSparseData);
 		LAUNCHERROR("kCalculateSparseAnalogOnlyNonZeroL2Error_kernel");    
     }
     else
     {
 		uint64_t size           = batch * stride;
 		uint32_t blocks         = CalculateBlocks(size);    
-		kCalculateSparseRawL2Error_kernel<<<blocks, getGpu()._threadsPerBlock>>>(pUnit, size);
+		kCalculateSparseRawL2Error_kernel<<<blocks, getGpu()._threadsPerBlock, 0, stream>>>(pUnit, size);
 		LAUNCHERROR("kCalculateSparseRawL2Error_kernel");
 		blocks                  = CalculateBlocks(batch * getGpu()._warpSize);
-		kCalculateSparseAnalogNonZeroL2Error_kernel<<<blocks, getGpu()._threadsPerBlock>>>(position, batch, stride, pUnit, pSparseStart, pSparseEnd, pSparseIndex, pSparseData);
+		kCalculateSparseAnalogNonZeroL2Error_kernel<<<blocks, getGpu()._threadsPerBlock, 0, stream>>>(position, batch, stride, pUnit, pSparseStart, pSparseEnd, pSparseIndex, pSparseData);
 		LAUNCHERROR("kCalculateSparseAnalogNonZeroL2Error_kernel");
 	}
 }
@@ -673,20 +677,21 @@ kCalculateSparseNonZeroCrossEntropyError_kernel(uint32_t position, uint32_t batc
 
 void kCalculateSparseCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, uint64_t* pSparseStart, uint64_t *pSparseEnd, uint32_t *pSparseIndex, bool bSparseIgnoreZero)
 {
+    auto stream = getGpu().getStream();
     if (bSparseIgnoreZero)
     {
 		uint32_t blocks         = CalculateBlocks(batch * getGpu()._warpSize);
-		kCalculateSparseOnlyNonZeroCrossEntropyError_kernel<<<blocks, getGpu()._threadsPerBlock>>>(position, batch, stride, pUnit, pSparseStart, pSparseEnd, pSparseIndex);
+		kCalculateSparseOnlyNonZeroCrossEntropyError_kernel<<<blocks, getGpu()._threadsPerBlock, 0, stream>>>(position, batch, stride, pUnit, pSparseStart, pSparseEnd, pSparseIndex);
 		LAUNCHERROR("kCalculateSparseOnlyNonZeroCrossEntropyError_kernel");    
     }
     else
     {    
 		uint64_t size           = (uint64_t)batch * (uint64_t)stride;
 		uint32_t blocks         = CalculateBlocks(size);
-		kCalculateSparseRawCrossEntropyError_kernel<<<blocks, getGpu()._threadsPerBlock>>>(pUnit, size);
+		kCalculateSparseRawCrossEntropyError_kernel<<<blocks, getGpu()._threadsPerBlock, 0, stream>>>(pUnit, size);
 		LAUNCHERROR("kCalculateSparseRawCrossEntropyError_kernel");
 		blocks                  = CalculateBlocks(batch * getGpu()._warpSize);
-		kCalculateSparseNonZeroCrossEntropyError_kernel<<<blocks, getGpu()._threadsPerBlock>>>(position, batch, stride, pUnit, pSparseStart, pSparseEnd, pSparseIndex);
+		kCalculateSparseNonZeroCrossEntropyError_kernel<<<blocks, getGpu()._threadsPerBlock, 0, stream>>>(position, batch, stride, pUnit, pSparseStart, pSparseEnd, pSparseIndex);
 		LAUNCHERROR("kCalculateSparseNonZeroCrossEntropyError_kernel");
 	}
 }
@@ -720,8 +725,9 @@ kCalculateSparseMultinomialCrossEntropyError_kernel(uint32_t position, uint32_t 
 
 void kCalculateSparseMultinomialCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, uint64_t* pSparseStart, uint64_t *pSparseEnd, uint32_t *pSparseIndex)
 {
+    auto stream = getGpu().getStream();
     uint32_t blocks             = CalculateBlocks(batch * getGpu()._warpSize);
-    kCalculateSparseMultinomialCrossEntropyError_kernel<<<blocks, getGpu()._threadsPerBlock>>>(position, batch, stride, pUnit, pSparseStart, pSparseEnd, pSparseIndex);
+    kCalculateSparseMultinomialCrossEntropyError_kernel<<<blocks, getGpu()._threadsPerBlock, 0, stream>>>(position, batch, stride, pUnit, pSparseStart, pSparseEnd, pSparseIndex);
     LAUNCHERROR("kCalculateSparseMultinomialCrossEntropyError_kernel");
 }
 
@@ -812,8 +818,9 @@ kCalculateSparseAnalogMultinomialCrossEntropyError_kernel(uint32_t position, uin
 template<typename T>
 void kCalculateSparseAnalogMultinomialCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, uint64_t* pSparseStart, uint64_t *pSparseEnd, uint32_t *pSparseIndex, T* pSparseData)
 {
+    auto stream = getGpu().getStream();
     uint32_t blocks             = CalculateBlocks(batch * getGpu()._warpSize);
-    kCalculateSparseAnalogMultinomialCrossEntropyError_kernel<<<blocks, getGpu()._threadsPerBlock>>>(position, batch, stride, pUnit, pSparseStart, pSparseEnd, pSparseIndex, pSparseData);
+    kCalculateSparseAnalogMultinomialCrossEntropyError_kernel<<<blocks, getGpu()._threadsPerBlock, 0, stream>>>(position, batch, stride, pUnit, pSparseStart, pSparseEnd, pSparseIndex, pSparseData);
     LAUNCHERROR("kCalculateSparseAnalogMultinomialCrossEntropyError_kernel");
 }
 
@@ -887,20 +894,21 @@ kCalculateSparseNonZeroScaledMarginalCrossEntropyError_kernel(uint32_t position,
 
 void kCalculateSparseScaledMarginalCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, uint64_t* pSparseStart, uint64_t *pSparseEnd, uint32_t *pSparseIndex, bool bSparseIgnoreZero)
 {
+    auto stream = getGpu().getStream();
     if (bSparseIgnoreZero)
     {
  		uint32_t blocks         = CalculateBlocks(batch * getGpu()._warpSize);
-		kCalculateSparseOnlyNonZeroScaledMarginalCrossEntropyError_kernel<<<blocks, getGpu()._threadsPerBlock>>>(position, batch, stride, pUnit, pSparseStart, pSparseEnd, pSparseIndex);
+		kCalculateSparseOnlyNonZeroScaledMarginalCrossEntropyError_kernel<<<blocks, getGpu()._threadsPerBlock, 0, stream>>>(position, batch, stride, pUnit, pSparseStart, pSparseEnd, pSparseIndex);
 		LAUNCHERROR("kCalculateSparseOnlyNonZeroScaledMarginalCrossEntropyError_kernel");   
     }
     else
     {
 		uint64_t size           = (uint64_t)batch * (uint64_t)stride;
 		uint32_t blocks         = CalculateBlocks(size);
-		kCalculateSparseRawScaledMarginalCrossEntropyError_kernel<<<blocks, getGpu()._threadsPerBlock>>>(pUnit, size);
+		kCalculateSparseRawScaledMarginalCrossEntropyError_kernel<<<blocks, getGpu()._threadsPerBlock, 0, stream>>>(pUnit, size);
 		LAUNCHERROR("kCalculateSparseRawScaledMarginalCrossEntropyError_kernel");
 		blocks                  = CalculateBlocks(batch * getGpu()._warpSize);
-		kCalculateSparseNonZeroScaledMarginalCrossEntropyError_kernel<<<blocks, getGpu()._threadsPerBlock>>>(position, batch, stride, pUnit, pSparseStart, pSparseEnd, pSparseIndex);
+		kCalculateSparseNonZeroScaledMarginalCrossEntropyError_kernel<<<blocks, getGpu()._threadsPerBlock, 0, stream>>>(position, batch, stride, pUnit, pSparseStart, pSparseEnd, pSparseIndex);
 		LAUNCHERROR("kCalculateSparseNonZeroScaledMarginalCrossEntropyError_kernel");
 	}    
 }
@@ -961,15 +969,16 @@ kCalculateSparseNonZeroDataScaledMarginalCrossEntropyError_kernel(uint32_t posit
 template<typename T>
 void kCalculateSparseDataScaledMarginalCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, uint64_t* pSparseStart, uint64_t *pSparseEnd, uint32_t *pSparseIndex, T* pSparseData, bool bSparseIgnoreZero)
 {
+    auto stream = getGpu().getStream();
     if (!bSparseIgnoreZero)
     {
         uint64_t size               = (uint64_t)batch * (uint64_t)stride;
         uint32_t blocks             = CalculateBlocks(size);
-        kCalculateSparseRawDataScaledMarginalCrossEntropyError_kernel<<<blocks, getGpu()._threadsPerBlock>>>(pUnit, size);
+        kCalculateSparseRawDataScaledMarginalCrossEntropyError_kernel<<<blocks, getGpu()._threadsPerBlock, 0, stream>>>(pUnit, size);
         LAUNCHERROR("kCalculateSparseRawDataScaledMarginalCrossEntropyError_kernel");
     }
     uint32_t blocks             = CalculateBlocks(batch * getGpu()._warpSize);
-    kCalculateSparseNonZeroDataScaledMarginalCrossEntropyError_kernel<<<blocks, getGpu()._threadsPerBlock>>>(position, batch, stride, pUnit, pSparseStart, pSparseEnd, pSparseIndex, pSparseData);
+    kCalculateSparseNonZeroDataScaledMarginalCrossEntropyError_kernel<<<blocks, getGpu()._threadsPerBlock, 0, stream>>>(position, batch, stride, pUnit, pSparseStart, pSparseEnd, pSparseIndex, pSparseData);
     LAUNCHERROR("kCalculateSparseNonZeroDataScaledMarginalCrossEntropyError_kernel");
 }
 
@@ -1003,7 +1012,8 @@ kCalculateSparseMultinomialScaledMarginalCrossEntropyError_kernel(uint32_t posit
 void kCalculateSparseMultinomialScaledMarginalCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, uint64_t* pSparseStart, uint64_t *pSparseEnd, uint32_t *pSparseIndex)
 {
     uint32_t blocks             = CalculateBlocks(batch * getGpu()._warpSize);
-    kCalculateSparseNonZeroScaledMarginalCrossEntropyError_kernel<<<blocks, getGpu()._threadsPerBlock>>>(position, batch, stride, pUnit, pSparseStart, pSparseEnd, pSparseIndex);
+    auto stream = getGpu().getStream();
+    kCalculateSparseNonZeroScaledMarginalCrossEntropyError_kernel<<<blocks, getGpu()._threadsPerBlock, 0, stream>>>(position, batch, stride, pUnit, pSparseStart, pSparseEnd, pSparseIndex);
     LAUNCHERROR("kCalculateSparseMultinomialScaledMarginalCrossEntropyError_kernel");    
 }
 
@@ -1095,7 +1105,8 @@ template<typename T>
 void kCalculateSparseAnalogMultinomialScaledMarginalCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, uint64_t* pSparseStart, uint64_t *pSparseEnd, uint32_t *pSparseIndex, T* pSparseData)
 {
     uint32_t blocks             = CalculateBlocks(batch * getGpu()._warpSize);
-    kCalculateSparseAnalogMultinomialScaledMarginalCrossEntropyError_kernel<<<blocks, getGpu()._threadsPerBlock>>>(position, batch, stride, pUnit, pSparseStart, pSparseEnd, pSparseIndex, pSparseData);
+    auto stream = getGpu().getStream();
+    kCalculateSparseAnalogMultinomialScaledMarginalCrossEntropyError_kernel<<<blocks, getGpu()._threadsPerBlock, 0, stream>>>(position, batch, stride, pUnit, pSparseStart, pSparseEnd, pSparseIndex, pSparseData);
     LAUNCHERROR("kCalculateSparseAnalogMultinomialScaledMarginalCrossEntropyError_kernel");    
 }
 
@@ -1159,7 +1170,7 @@ kCalculateL1Error_kernel(uint32_t position, uint32_t stride, NNFloat* pUnit, cha
 template<typename T> void kCalculateL1Error(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, T* pData)
 {
     dim3 grid(batch, (stride + getGpu()._threadsPerBlock - 1) / getGpu()._threadsPerBlock);
-    kCalculateL1Error_kernel<<<grid, getGpu()._threadsPerBlock>>>(position, stride, pUnit, pData);
+    kCalculateL1Error_kernel<<<grid, getGpu()._threadsPerBlock, 0, getGpu().getStream()>>>(position, stride, pUnit, pData);
     LAUNCHERROR("kCalculateL1Error_kernel");
 }
 
@@ -1224,7 +1235,8 @@ kCalculateL2Error_kernel(uint32_t position, uint32_t stride, NNFloat* pUnit, cha
 template<typename T> void kCalculateL2Error(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, T* pData)
 {
     dim3 grid(batch, (stride + getGpu()._threadsPerBlock - 1) / getGpu()._threadsPerBlock);
-    kCalculateL2Error_kernel<<<grid, getGpu()._threadsPerBlock>>>(position, stride, pUnit, pData);
+    auto stream = getGpu().getStream();
+    kCalculateL2Error_kernel<<<grid, getGpu()._threadsPerBlock, 0, stream>>>(position, stride, pUnit, pData);
     LAUNCHERROR("kCalculateL2Error_kernel");    
 }
 
@@ -1290,7 +1302,8 @@ kCalculateCrossEntropyError_kernel(uint32_t position, uint32_t stride, NNFloat* 
 template<typename T> void kCalculateCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, T* pData)
 {
     dim3 grid(batch, (stride + getGpu()._threadsPerBlock - 1) / getGpu()._threadsPerBlock);
-    kCalculateCrossEntropyError_kernel<<<grid, getGpu()._threadsPerBlock>>>(position, stride, pUnit, pData);
+    auto stream = getGpu().getStream();
+    kCalculateCrossEntropyError_kernel<<<grid, getGpu()._threadsPerBlock, 0, stream>>>(position, stride, pUnit, pData);
     LAUNCHERROR("kCalculateCrossEntropyError_kernel");
 }
 
@@ -1356,7 +1369,8 @@ kCalculateMultinomialCrossEntropyError_kernel(uint32_t position, uint32_t stride
 template<typename T> void kCalculateMultinomialCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, T* pData)
 {
     dim3 grid(batch, (stride + getGpu()._threadsPerBlock - 1) / getGpu()._threadsPerBlock);
-    kCalculateMultinomialCrossEntropyError_kernel<<<grid, getGpu()._threadsPerBlock>>>(position, stride, pUnit, pData);
+    auto stream = getGpu().getStream();
+    kCalculateMultinomialCrossEntropyError_kernel<<<grid, getGpu()._threadsPerBlock, 0, stream>>>(position, stride, pUnit, pData);
     LAUNCHERROR("kCalculateMultinomialCrossEntropyError_kernel");
 }
 
@@ -1426,7 +1440,8 @@ kCalculateScaledMarginalCrossEntropyError_kernel(uint32_t position, uint32_t str
 template<typename T> void kCalculateScaledMarginalCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, T* pData)
 {
     dim3 grid(batch, (stride + getGpu()._threadsPerBlock - 1) / getGpu()._threadsPerBlock);
-    kCalculateScaledMarginalCrossEntropyError_kernel<<<grid, getGpu()._threadsPerBlock>>>(position, stride, pUnit, pData);
+    auto stream = getGpu().getStream();
+    kCalculateScaledMarginalCrossEntropyError_kernel<<<grid, getGpu()._threadsPerBlock, 0, stream>>>(position, stride, pUnit, pData);
     LAUNCHERROR("kCalculateScaledMarginalCrossEntropyError_kernel");
 }
 
@@ -1495,7 +1510,8 @@ kCalculateMultinomialScaledMarginalCrossEntropyError_kernel(uint32_t position, u
 template<typename T> void kCalculateMultinomialScaledMarginalCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, T* pData)
 {
     dim3 grid(batch, (stride + getGpu()._threadsPerBlock - 1) / getGpu()._threadsPerBlock);
-    kCalculateMultinomialScaledMarginalCrossEntropyError_kernel<<<grid, getGpu()._threadsPerBlock>>>(position, stride, pUnit, pData);
+    auto stream = getGpu().getStream();
+    kCalculateMultinomialScaledMarginalCrossEntropyError_kernel<<<grid, getGpu()._threadsPerBlock, 0, stream>>>(position, stride, pUnit, pData);
     LAUNCHERROR("kCalculateMultinomialScaledMarginalCrossEntropyError_kernel");
 }
 

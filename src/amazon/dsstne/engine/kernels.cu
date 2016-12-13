@@ -1416,7 +1416,7 @@ kCalculateRegularizationError_kernel(NNFloat* pWeight, uint64_t size)
 void kCalculateRegularizationError(NNFloat lambda, NNFloat* pWeight, uint64_t size)
 {
     uint32_t blocks         = CalculateBlocks(size);
-    kCalculateRegularizationError_kernel<<<blocks, getGpu()._threadsPerBlock>>>(pWeight, size);
+    kCalculateRegularizationError_kernel<<<blocks, getGpu()._threadsPerBlock, 0, getGpu().getStream()>>>(pWeight, size);
     LAUNCHERROR("kCalculateRegularizationError_kernel");
 }
 

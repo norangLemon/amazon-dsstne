@@ -1579,6 +1579,7 @@ tuple<NNFloat, NNFloat> NNNetwork::CalculateError(NNFloat lambda)
             w->CalculateRegularizationError(lambda);
         }
     }
+    cudaDeviceSynchronize();
     getGpu()._pbAccumulator->Download();
     error_training = (NNFloat)((double)(getGpu()._pbAccumulator->_pSysData[0]) / ESCALE);
     error_regularization = (NNFloat)(lambda * 0.5f * (double)(getGpu()._pbAccumulator->_pSysData[1]) / ESCALE);
