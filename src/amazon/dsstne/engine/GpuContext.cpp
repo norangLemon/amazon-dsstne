@@ -41,7 +41,8 @@ _maxSparse(SM_3X_MAXSPARSE),
 _maxSparseAnalog(SM_3X_MAXSPARSEANALOG),
 _cuBLASHandle(0),
 _cuDNNHandle(0),
-_pbAccumulator()
+_pbAccumulator(),
+_currentStream(0)
 {
 
 }
@@ -245,6 +246,16 @@ void GpuContext::Startup(int argc, char** argv)
     status                                          = cudaSetDevice(device);
     RTERROR(status, "GpuContext::Startup: Error setting CUDA device");
     _device                                         = device;
+
+    for (size_t i = 0; i < 10; i += 1) {
+        status = cudaStreamCreate(_streams + i);
+        if (status != cudaSuccess) {
+            printf("GpuContext::Startup: Error create %lu-th stream", i);
+            assert(0);
+            cudaThreadExit();
+            exit(-1);
+        }
+    }
     cudaThreadSynchronize();
 
     // Create local accumulator
@@ -433,6 +444,9 @@ void GpuContext::Shutdown()
     }
     printf("GpuContext::Shutdown: CuRand shut down on GPU for process %d\n", _device);
 
+    for (auto& stream : _streams) {
+        cudaStreamDestroy(stream);
+    }
     // Exit CUDA
     cudaThreadExit();
 
@@ -503,4 +517,13 @@ enum {
 unsigned int GpuContext::Pad(unsigned int x)
 {
     return (x + PADDING - 1) & PADDINGMASK;
+}
+
+cudaStream_t GpuContext::getStream()
+{
+    const size_t current = _currentStream++;
+    if (_currentStream > 10) {
+        _currentStream = 0;
+    }
+    return _streams[current];
 }

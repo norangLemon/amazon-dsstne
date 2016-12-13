@@ -66,6 +66,9 @@ struct GpuContext {
     bool                                _bSingleNode;               // Flag to indicate MPI run is all on one node
     bool                                _bP2P;                      // Flag to indicate P2P connectivity between all processes
 
+    cudaStream_t _streams[10];
+    size_t _currentStream;
+
     // Methods
     GpuContext();
     ~GpuContext();
@@ -79,6 +82,8 @@ struct GpuContext {
 
     // Static methods
     static unsigned int Pad(unsigned int x);
+
+    cudaStream_t getStream();
 };
 
 extern struct GpuContext& getGpu();
