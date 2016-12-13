@@ -138,7 +138,7 @@ int main(int argc, char** argv)
     pNetwork->SaveNetCDF("initial_network.nc");
 
     // Set to default training mode SGD.
-    TrainingMode mode=SGD;
+    TrainingMode mode=Momentum;
     pNetwork->SetTrainingMode(mode);
 	
     timeval trainingStart;
