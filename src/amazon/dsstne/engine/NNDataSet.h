@@ -64,17 +64,17 @@ private:
     bool LoadSparseDenoisedInputUnit(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit);
     bool CalculateSparseZ(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pWeight, NNFloat* pUnit, NNFloat beta);
     bool CalculateSparseDenoisedZ(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pWeight, NNFloat* pUnit, NNFloat beta);
-    float CalculateL1Error(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit);
-    float CalculateL2Error(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit);
-    float CalculateCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit);
-    float CalculateScaledMarginalCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit);
-    float CalculateMultinomialCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit);
-    float CalculateMultinomialScaledMarginalCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit);
+    void CalculateL1Error(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit);
+    void CalculateL2Error(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit);
+    void CalculateCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit);
+    void CalculateScaledMarginalCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit);
+    void CalculateMultinomialCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit);
+    void CalculateMultinomialScaledMarginalCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit);
     bool CalculateL1OutputDelta(Activation activation, uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, NNFloat* pDelta);
     bool CalculateCrossEntropyOutputDelta(Activation activation, uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, NNFloat* pDelta);
     bool CalculateScaledMarginalCrossEntropyOutputDelta(Activation activation, uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, NNFloat* pDelta);
     bool CalculateOutputDelta(Activation activation, uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, NNFloat* pDelta);
-    float CalculateDataScaledMarginalCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit);
+    void CalculateDataScaledMarginalCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit);
     bool CalculateDataScaledMarginalCrossEntropyOutputDelta(Activation activation, uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, NNFloat* pDelta);
 
 public:
@@ -1551,19 +1551,19 @@ template<typename T> bool NNDataSet<T>::CalculateSparseTransposedWeightGradient(
     return true;
 }
 
-template<typename T> float NNDataSet<T>::CalculateL1Error(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit)
+template<typename T> void NNDataSet<T>::CalculateL1Error(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit)
 {
     if (_attributes & NNDataSetEnums::Sparse)
     {
         bool bSparseIgnoreZero = _attributes & NNDataSetEnums::SparseIgnoreZero;
         if (_attributes & NNDataSetEnums::Boolean)
-           return kCalculateSparseL1Error(position, batch, stride, pUnit,
+            kCalculateSparseL1Error(position, batch, stride, pUnit,
                   _pbSparseStart->_pDevData,
                   _pbSparseEnd->_pDevData,
                   _pbSparseIndex->_pDevData,
                   bSparseIgnoreZero);
         else
-           return kCalculateSparseAnalogL1Error(position, batch, stride, pUnit,
+            kCalculateSparseAnalogL1Error(position, batch, stride, pUnit,
                   _pbSparseStart->_pDevData,
                   _pbSparseEnd->_pDevData,
                   _pbSparseIndex->_pDevData,
@@ -1571,22 +1571,22 @@ template<typename T> float NNDataSet<T>::CalculateL1Error(uint32_t position, uin
                   bSparseIgnoreZero);
     }
     else
-        return kCalculateL1Error(position, batch, stride, pUnit, _pbData->_pDevData);
+        kCalculateL1Error(position, batch, stride, pUnit, _pbData->_pDevData);
 }
 
-template<typename T> float NNDataSet<T>::CalculateL2Error(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit)
+template<typename T> void NNDataSet<T>::CalculateL2Error(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit)
 {
     if (_attributes & NNDataSetEnums::Sparse)
     {
         bool bSparseIgnoreZero = _attributes & NNDataSetEnums::SparseIgnoreZero;
         if (_attributes & NNDataSetEnums::Boolean)
-            return kCalculateSparseL2Error(position, batch, stride, pUnit,
+            kCalculateSparseL2Error(position, batch, stride, pUnit,
                    _pbSparseStart->_pDevData,
                    _pbSparseEnd->_pDevData,
                    _pbSparseIndex->_pDevData,
                    bSparseIgnoreZero);
         else
-            return kCalculateSparseAnalogL2Error(position, batch, stride, pUnit,
+            kCalculateSparseAnalogL2Error(position, batch, stride, pUnit,
                    _pbSparseStart->_pDevData,
                    _pbSparseEnd->_pDevData,
                    _pbSparseIndex->_pDevData,
@@ -1594,82 +1594,82 @@ template<typename T> float NNDataSet<T>::CalculateL2Error(uint32_t position, uin
                    bSparseIgnoreZero);
     }
     else
-        return kCalculateL2Error(position, batch, stride, pUnit, _pbData->_pDevData);
+        kCalculateL2Error(position, batch, stride, pUnit, _pbData->_pDevData);
 }
 
-template<typename T> float NNDataSet<T>::CalculateCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit)
+template<typename T> void NNDataSet<T>::CalculateCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit)
 {
     if (_attributes & NNDataSetEnums::Sparse)
     {
         bool bSparseIgnoreZero = _attributes & NNDataSetEnums::SparseIgnoreZero;
-        return kCalculateSparseCrossEntropyError(position, batch, stride, pUnit,
+        kCalculateSparseCrossEntropyError(position, batch, stride, pUnit,
                _pbSparseStart->_pDevData,
                _pbSparseEnd->_pDevData,
                _pbSparseIndex->_pDevData,
                bSparseIgnoreZero);
     }
     else
-        return kCalculateCrossEntropyError(position, batch, stride, pUnit, _pbData->_pDevData);
+        kCalculateCrossEntropyError(position, batch, stride, pUnit, _pbData->_pDevData);
 }
 
-template<typename T> float NNDataSet<T>::CalculateScaledMarginalCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit)
+template<typename T> void NNDataSet<T>::CalculateScaledMarginalCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit)
 {
     if (_attributes & NNDataSetEnums::Sparse)
     {
         bool bSparseIgnoreZero = _attributes & NNDataSetEnums::SparseIgnoreZero;
-        return kCalculateSparseScaledMarginalCrossEntropyError(position, batch, stride, pUnit,
+        kCalculateSparseScaledMarginalCrossEntropyError(position, batch, stride, pUnit,
                _pbSparseStart->_pDevData,
                _pbSparseEnd->_pDevData,
                _pbSparseIndex->_pDevData,
                bSparseIgnoreZero);
     }
     else
-        return kCalculateScaledMarginalCrossEntropyError(position, batch, stride, pUnit, _pbData->_pDevData);
+        kCalculateScaledMarginalCrossEntropyError(position, batch, stride, pUnit, _pbData->_pDevData);
 }
 
-template<typename T> float NNDataSet<T>::CalculateMultinomialCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit)
+template<typename T> void NNDataSet<T>::CalculateMultinomialCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit)
 {
     if (_attributes & NNDataSetEnums::Sparse)
     {
         if (_attributes & NNDataSetEnums::Boolean)
         {
-            return kCalculateSparseMultinomialCrossEntropyError(position, batch, stride, pUnit,
+            kCalculateSparseMultinomialCrossEntropyError(position, batch, stride, pUnit,
                    _pbSparseStart->_pDevData,
                    _pbSparseEnd->_pDevData,
                    _pbSparseIndex->_pDevData);
         }
         else
-            return kCalculateSparseAnalogMultinomialCrossEntropyError(position, batch, stride, pUnit,
+            kCalculateSparseAnalogMultinomialCrossEntropyError(position, batch, stride, pUnit,
                    _pbSparseStart->_pDevData,
                    _pbSparseEnd->_pDevData,
                    _pbSparseIndex->_pDevData,
                    _pbSparseData->_pDevData);
     }
     else
-        return kCalculateMultinomialCrossEntropyError(position, batch, stride, pUnit, _pbData->_pDevData);
+        kCalculateMultinomialCrossEntropyError(position, batch, stride, pUnit, _pbData->_pDevData);
 }
 
-template<typename T> float NNDataSet<T>::CalculateMultinomialScaledMarginalCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit)
+template<typename T> void NNDataSet<T>::CalculateMultinomialScaledMarginalCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit)
 {
     if (_attributes & NNDataSetEnums::Sparse)
     {
         if (_attributes & NNDataSetEnums::Boolean)
-            return kCalculateSparseMultinomialScaledMarginalCrossEntropyError(position, batch, stride, pUnit,
+            kCalculateSparseMultinomialScaledMarginalCrossEntropyError(position, batch, stride, pUnit,
                    _pbSparseStart->_pDevData,
                    _pbSparseEnd->_pDevData,
                    _pbSparseIndex->_pDevData);
         else
-            return kCalculateSparseAnalogMultinomialScaledMarginalCrossEntropyError(position, batch, stride, pUnit,
+            kCalculateSparseAnalogMultinomialScaledMarginalCrossEntropyError(position, batch, stride, pUnit,
                    _pbSparseStart->_pDevData,
                    _pbSparseEnd->_pDevData,
                    _pbSparseIndex->_pDevData,
                    _pbSparseData->_pDevData);
     }
     else
-        return kCalculateMultinomialScaledMarginalCrossEntropyError(position, batch, stride, pUnit, _pbData->_pDevData);
+        kCalculateMultinomialScaledMarginalCrossEntropyError(position, batch, stride, pUnit, _pbData->_pDevData);
 }
 
-template<typename T> float NNDataSet<T>::CalculateDataScaledMarginalCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit)
+template<typename T> void NNDataSet<T>::CalculateDataScaledMarginalCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit)
 {
     if (_attributes & NNDataSetEnums::Sparse)
     {
@@ -1682,7 +1682,7 @@ template<typename T> float NNDataSet<T>::CalculateDataScaledMarginalCrossEntropy
         else
         {
             bool bSparseIgnoreZero = _attributes & NNDataSetEnums::SparseIgnoreZero;
-            return kCalculateSparseDataScaledMarginalCrossEntropyError(position, batch, stride, pUnit,
+            kCalculateSparseDataScaledMarginalCrossEntropyError(position, batch, stride, pUnit,
                             _pbSparseStart->_pDevData, _pbSparseEnd->_pDevData, _pbSparseIndex->_pDevData,
                             _pbSparseData->_pDevData, bSparseIgnoreZero);
         }

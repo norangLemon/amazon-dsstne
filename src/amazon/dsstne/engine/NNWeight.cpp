@@ -419,13 +419,11 @@ void NNWeight::RefreshState(NNNetwork* pNetwork, TrainingMode mode)
     }
 }
 
-float NNWeight::CalculateRegularizationError(NNFloat lambda)
+void NNWeight::CalculateRegularizationError(NNFloat lambda)
 {
     // Error on a shared set of weights is only calculated from its original source
-    if (_bShared)
-        return 0;
-    else
-        return kCalculateRegularizationError(lambda, _pbWeight->_pDevData, _size);
+    if (!_bShared)
+        kCalculateRegularizationError(lambda, _pbWeight->_pDevData, _size);
 }
 
 // Calculates Unit(l)^T * Delta(l + 1), the product of a [stride][batch] and [batch][outgoing stride] matrix

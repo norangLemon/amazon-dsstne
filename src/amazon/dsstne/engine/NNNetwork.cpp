@@ -1571,28 +1571,31 @@ void NNNetwork::ClearUpdates()
 
 tuple<NNFloat, NNFloat> NNNetwork::CalculateError(NNFloat lambda)
 {
-    NNFloat error_training                  = (NNFloat)0.0;
-    NNFloat error_regularization            = (NNFloat)0.0;
-
     // Calculate batch size
     uint32_t batch                          = _batch;
     if (_position + batch > _examples)
         batch                               = _examples - _position;
+    cudaMemset(getGpu()._data._pAccumulator, 0, sizeof(unsigned long long int) * 2);
 
     // Calculate loss error
+    NNFloat error_training = 0.0f;
     for (const auto& l: _vOutputLayer)
     {          
-        error_training                     += l->CalculateError(_position, batch, _errorFunction);
+        l->CalculateError(_position, batch, _errorFunction);
     }
 
     // Calculate regularization error
+    NNFloat error_regularization = 0.0f;
     if (lambda > (NNFloat)0.0)
     {
         for (const auto& w: _vWeight)
         {
-            error_regularization           += w->CalculateRegularizationError(lambda);
+            w->CalculateRegularizationError(lambda);
         }
     }
+    getGpu()._pbAccumulator->Download();
+    error_training = (NNFloat)((double)(getGpu()._pbAccumulator->_pSysData[0]) / ESCALE);
+    error_regularization = (NNFloat)(lambda * 0.5f * (double)(getGpu()._pbAccumulator->_pSysData[1]) / ESCALE);
     
     // Reduce results if running multi-GPU
     if (getGpu()._numprocs > 1)

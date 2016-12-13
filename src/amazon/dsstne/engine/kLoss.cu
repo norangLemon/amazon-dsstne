@@ -130,9 +130,8 @@ kCalculateSparseOnlyNonZeroL1Error_kernel(uint32_t position, uint32_t batch, uin
 
 
 
-NNFloat kCalculateSparseL1Error(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, uint64_t* pSparseStart, uint64_t *pSparseEnd, uint32_t *pSparseIndex, bool bSparseIgnoreZero)
+void kCalculateSparseL1Error(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, uint64_t* pSparseStart, uint64_t *pSparseEnd, uint32_t *pSparseIndex, bool bSparseIgnoreZero)
 {
-    cudaMemset(getGpu()._data._pAccumulator, 0, sizeof(uint64_t));
     if (bSparseIgnoreZero)
     {
 		uint32_t blocks             = CalculateBlocks(batch * getGpu()._warpSize);    
@@ -149,8 +148,6 @@ NNFloat kCalculateSparseL1Error(uint32_t position, uint32_t batch, uint32_t stri
 		kCalculateSparseNonZeroL1Error_kernel<<<blocks, getGpu()._threadsPerBlock>>>(position, batch, stride, pUnit, pSparseStart, pSparseEnd, pSparseIndex);
 		LAUNCHERROR("kCalculateSparseNonZeroL1Error_kernel");
 	}
-    getGpu()._pbAccumulator->Download(); 
-    return (NNFloat)((double)(getGpu()._pbAccumulator->_pSysData[0]) * ONEOVERERRORSCALE);
 }
 
 template<typename T>
@@ -318,9 +315,8 @@ kCalculateSparseAnalogNonZeroL1Error_kernel(uint32_t position, uint32_t batch, u
 }
 
 template<typename T>
-NNFloat kCalculateSparseAnalogL1Error(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, uint64_t* pSparseStart, uint64_t *pSparseEnd, uint32_t *pSparseIndex, T* pSparseData, bool bSparseIgnoreZero)
+void kCalculateSparseAnalogL1Error(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, uint64_t* pSparseStart, uint64_t *pSparseEnd, uint32_t *pSparseIndex, T* pSparseData, bool bSparseIgnoreZero)
 {
-    cudaMemset(getGpu()._data._pAccumulator, 0, sizeof(uint64_t));
     if (bSparseIgnoreZero)
     {
 		uint32_t blocks         = CalculateBlocks(batch * getGpu()._warpSize);    
@@ -337,8 +333,6 @@ NNFloat kCalculateSparseAnalogL1Error(uint32_t position, uint32_t batch, uint32_
 		kCalculateSparseAnalogNonZeroL1Error_kernel<<<blocks, getGpu()._threadsPerBlock>>>(position, batch, stride, pUnit, pSparseStart, pSparseEnd, pSparseIndex, pSparseData);
 		LAUNCHERROR("kCalculateSparseAnalogNonZeroL1Error_kernel");
 	}
-    getGpu()._pbAccumulator->Download(); 
-    return (NNFloat)((double)(getGpu()._pbAccumulator->_pSysData[0]) * ONEOVERERRORSCALE);
 }
 
 __global__ void
@@ -407,9 +401,8 @@ kCalculateSparseNonZeroL2Error_kernel(uint32_t position, uint32_t batch, uint32_
 }
 
 
-NNFloat kCalculateSparseL2Error(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, uint64_t* pSparseStart, uint64_t *pSparseEnd, uint32_t *pSparseIndex, bool bSparseIgnoreZero)
+void kCalculateSparseL2Error(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, uint64_t* pSparseStart, uint64_t *pSparseEnd, uint32_t *pSparseIndex, bool bSparseIgnoreZero)
 {
-    cudaMemset(getGpu()._data._pAccumulator, 0, sizeof(uint64_t));
     if (bSparseIgnoreZero)
     {
 		uint32_t blocks         = CalculateBlocks(batch * getGpu()._warpSize);    
@@ -426,8 +419,6 @@ NNFloat kCalculateSparseL2Error(uint32_t position, uint32_t batch, uint32_t stri
 		kCalculateSparseNonZeroL2Error_kernel<<<blocks, getGpu()._threadsPerBlock>>>(position, batch, stride, pUnit, pSparseStart, pSparseEnd, pSparseIndex);
 		LAUNCHERROR("kCalculateSparseNonZeroL2Error_kernel");
 	}
-    getGpu()._pbAccumulator->Download(); 
-    return (NNFloat)((double)(getGpu()._pbAccumulator->_pSysData[0]) * ONEOVERERRORSCALE);
 }
 
 template<typename T>
@@ -594,9 +585,8 @@ kCalculateSparseAnalogNonZeroL2Error_kernel(uint32_t position, uint32_t batch, u
 
 
 template<typename T>
-NNFloat kCalculateSparseAnalogL2Error(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, uint64_t* pSparseStart, uint64_t *pSparseEnd, uint32_t *pSparseIndex, T* pSparseData, bool bSparseIgnoreZero)
+void kCalculateSparseAnalogL2Error(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, uint64_t* pSparseStart, uint64_t *pSparseEnd, uint32_t *pSparseIndex, T* pSparseData, bool bSparseIgnoreZero)
 {
-    cudaMemset(getGpu()._data._pAccumulator, 0, sizeof(uint64_t));
     if (bSparseIgnoreZero)
     {
 		uint32_t blocks         = CalculateBlocks(batch * getGpu()._warpSize);
@@ -613,8 +603,6 @@ NNFloat kCalculateSparseAnalogL2Error(uint32_t position, uint32_t batch, uint32_
 		kCalculateSparseAnalogNonZeroL2Error_kernel<<<blocks, getGpu()._threadsPerBlock>>>(position, batch, stride, pUnit, pSparseStart, pSparseEnd, pSparseIndex, pSparseData);
 		LAUNCHERROR("kCalculateSparseAnalogNonZeroL2Error_kernel");
 	}
-    getGpu()._pbAccumulator->Download(); 
-    return (NNFloat)((double)(getGpu()._pbAccumulator->_pSysData[0]) * ONEOVERERRORSCALE);
 }
 
 
@@ -683,9 +671,8 @@ kCalculateSparseNonZeroCrossEntropyError_kernel(uint32_t position, uint32_t batc
     REDUCE_ERROR()
 }
 
-NNFloat kCalculateSparseCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, uint64_t* pSparseStart, uint64_t *pSparseEnd, uint32_t *pSparseIndex, bool bSparseIgnoreZero)
+void kCalculateSparseCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, uint64_t* pSparseStart, uint64_t *pSparseEnd, uint32_t *pSparseIndex, bool bSparseIgnoreZero)
 {
-    cudaMemset(getGpu()._data._pAccumulator, 0, sizeof(uint64_t));
     if (bSparseIgnoreZero)
     {
 		uint32_t blocks         = CalculateBlocks(batch * getGpu()._warpSize);
@@ -702,10 +689,6 @@ NNFloat kCalculateSparseCrossEntropyError(uint32_t position, uint32_t batch, uin
 		kCalculateSparseNonZeroCrossEntropyError_kernel<<<blocks, getGpu()._threadsPerBlock>>>(position, batch, stride, pUnit, pSparseStart, pSparseEnd, pSparseIndex);
 		LAUNCHERROR("kCalculateSparseNonZeroCrossEntropyError_kernel");
 	}
-    getGpu()._pbAccumulator->Download(); 
-    //printf("Error is %f\n",  (double)(getGpu()._pbAccumulator->_pSysData[0]) * ONEOVERERRORSCALE);
-
-    return (NNFloat)((double)(getGpu()._pbAccumulator->_pSysData[0]) * ONEOVERERRORSCALE);
 }
 
 __global__ void
@@ -735,16 +718,11 @@ kCalculateSparseMultinomialCrossEntropyError_kernel(uint32_t position, uint32_t 
     REDUCE_ERROR()
 }
 
-NNFloat kCalculateSparseMultinomialCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, uint64_t* pSparseStart, uint64_t *pSparseEnd, uint32_t *pSparseIndex)
+void kCalculateSparseMultinomialCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, uint64_t* pSparseStart, uint64_t *pSparseEnd, uint32_t *pSparseIndex)
 {
-    cudaMemset(getGpu()._data._pAccumulator, 0, sizeof(uint64_t));
     uint32_t blocks             = CalculateBlocks(batch * getGpu()._warpSize);
     kCalculateSparseMultinomialCrossEntropyError_kernel<<<blocks, getGpu()._threadsPerBlock>>>(position, batch, stride, pUnit, pSparseStart, pSparseEnd, pSparseIndex);
     LAUNCHERROR("kCalculateSparseMultinomialCrossEntropyError_kernel");
-    getGpu()._pbAccumulator->Download(); 
-    //printf("Error is %f\n",  (double)(getGpu()._pbAccumulator->_pSysData[0]) * ONEOVERERRORSCALE);
-
-    return (NNFloat)((double)(getGpu()._pbAccumulator->_pSysData[0]) * ONEOVERERRORSCALE);
 }
 
 
@@ -832,14 +810,11 @@ kCalculateSparseAnalogMultinomialCrossEntropyError_kernel(uint32_t position, uin
 
 
 template<typename T>
-NNFloat kCalculateSparseAnalogMultinomialCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, uint64_t* pSparseStart, uint64_t *pSparseEnd, uint32_t *pSparseIndex, T* pSparseData)
+void kCalculateSparseAnalogMultinomialCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, uint64_t* pSparseStart, uint64_t *pSparseEnd, uint32_t *pSparseIndex, T* pSparseData)
 {
-    cudaMemset(getGpu()._data._pAccumulator, 0, sizeof(uint64_t));
     uint32_t blocks             = CalculateBlocks(batch * getGpu()._warpSize);
     kCalculateSparseAnalogMultinomialCrossEntropyError_kernel<<<blocks, getGpu()._threadsPerBlock>>>(position, batch, stride, pUnit, pSparseStart, pSparseEnd, pSparseIndex, pSparseData);
     LAUNCHERROR("kCalculateSparseAnalogMultinomialCrossEntropyError_kernel");
-    getGpu()._pbAccumulator->Download(); 
-    return (NNFloat)((double)(getGpu()._pbAccumulator->_pSysData[0]) * ONEOVERERRORSCALE);
 }
 
 __global__ void
@@ -910,9 +885,8 @@ kCalculateSparseNonZeroScaledMarginalCrossEntropyError_kernel(uint32_t position,
     REDUCE_ERROR()
 }
 
-NNFloat kCalculateSparseScaledMarginalCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, uint64_t* pSparseStart, uint64_t *pSparseEnd, uint32_t *pSparseIndex, bool bSparseIgnoreZero)
+void kCalculateSparseScaledMarginalCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, uint64_t* pSparseStart, uint64_t *pSparseEnd, uint32_t *pSparseIndex, bool bSparseIgnoreZero)
 {
-    cudaMemset(getGpu()._data._pAccumulator, 0, sizeof(uint64_t));
     if (bSparseIgnoreZero)
     {
  		uint32_t blocks         = CalculateBlocks(batch * getGpu()._warpSize);
@@ -929,9 +903,6 @@ NNFloat kCalculateSparseScaledMarginalCrossEntropyError(uint32_t position, uint3
 		kCalculateSparseNonZeroScaledMarginalCrossEntropyError_kernel<<<blocks, getGpu()._threadsPerBlock>>>(position, batch, stride, pUnit, pSparseStart, pSparseEnd, pSparseIndex);
 		LAUNCHERROR("kCalculateSparseNonZeroScaledMarginalCrossEntropyError_kernel");
 	}    
-    getGpu()._pbAccumulator->Download(); 
-    //printf("Error is %f\n",  (double)(getGpu()._pbAccumulator->_pSysData[0]) * ONEOVERERRORSCALE);
-    return (NNFloat)((double)(getGpu()._pbAccumulator->_pSysData[0]) * ONEOVERERRORSCALE);
 }
 
 __global__ void
@@ -988,10 +959,8 @@ kCalculateSparseNonZeroDataScaledMarginalCrossEntropyError_kernel(uint32_t posit
 }
 
 template<typename T>
-NNFloat kCalculateSparseDataScaledMarginalCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, uint64_t* pSparseStart, uint64_t *pSparseEnd, uint32_t *pSparseIndex, T* pSparseData, bool bSparseIgnoreZero)
+void kCalculateSparseDataScaledMarginalCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, uint64_t* pSparseStart, uint64_t *pSparseEnd, uint32_t *pSparseIndex, T* pSparseData, bool bSparseIgnoreZero)
 {
-    cudaMemset(getGpu()._data._pAccumulator, 0, sizeof(uint64_t));
-
     if (!bSparseIgnoreZero)
     {
         uint64_t size               = (uint64_t)batch * (uint64_t)stride;
@@ -1002,8 +971,6 @@ NNFloat kCalculateSparseDataScaledMarginalCrossEntropyError(uint32_t position, u
     uint32_t blocks             = CalculateBlocks(batch * getGpu()._warpSize);
     kCalculateSparseNonZeroDataScaledMarginalCrossEntropyError_kernel<<<blocks, getGpu()._threadsPerBlock>>>(position, batch, stride, pUnit, pSparseStart, pSparseEnd, pSparseIndex, pSparseData);
     LAUNCHERROR("kCalculateSparseNonZeroDataScaledMarginalCrossEntropyError_kernel");
-    getGpu()._pbAccumulator->Download();
-    return (NNFloat)((double)(getGpu()._pbAccumulator->_pSysData[0]) * ONEOVERERRORSCALE);
 }
 
 __global__ void
@@ -1033,15 +1000,11 @@ kCalculateSparseMultinomialScaledMarginalCrossEntropyError_kernel(uint32_t posit
     REDUCE_ERROR()
 }
 
-NNFloat kCalculateSparseMultinomialScaledMarginalCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, uint64_t* pSparseStart, uint64_t *pSparseEnd, uint32_t *pSparseIndex)
+void kCalculateSparseMultinomialScaledMarginalCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, uint64_t* pSparseStart, uint64_t *pSparseEnd, uint32_t *pSparseIndex)
 {
-    cudaMemset(getGpu()._data._pAccumulator, 0, sizeof(uint64_t));
     uint32_t blocks             = CalculateBlocks(batch * getGpu()._warpSize);
     kCalculateSparseNonZeroScaledMarginalCrossEntropyError_kernel<<<blocks, getGpu()._threadsPerBlock>>>(position, batch, stride, pUnit, pSparseStart, pSparseEnd, pSparseIndex);
     LAUNCHERROR("kCalculateSparseMultinomialScaledMarginalCrossEntropyError_kernel");    
-    getGpu()._pbAccumulator->Download(); 
-    //printf("Error is %f\n",  (double)(getGpu()._pbAccumulator->_pSysData[0]) * ONEOVERERRORSCALE);
-    return (NNFloat)((double)(getGpu()._pbAccumulator->_pSysData[0]) * ONEOVERERRORSCALE);
 }
 
 
@@ -1129,15 +1092,11 @@ kCalculateSparseAnalogMultinomialScaledMarginalCrossEntropyError_kernel(uint32_t
 }
 
 template<typename T>
-NNFloat kCalculateSparseAnalogMultinomialScaledMarginalCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, uint64_t* pSparseStart, uint64_t *pSparseEnd, uint32_t *pSparseIndex, T* pSparseData)
+void kCalculateSparseAnalogMultinomialScaledMarginalCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, uint64_t* pSparseStart, uint64_t *pSparseEnd, uint32_t *pSparseIndex, T* pSparseData)
 {
-    cudaMemset(getGpu()._data._pAccumulator, 0, sizeof(uint64_t));
     uint32_t blocks             = CalculateBlocks(batch * getGpu()._warpSize);
     kCalculateSparseAnalogMultinomialScaledMarginalCrossEntropyError_kernel<<<blocks, getGpu()._threadsPerBlock>>>(position, batch, stride, pUnit, pSparseStart, pSparseEnd, pSparseIndex, pSparseData);
     LAUNCHERROR("kCalculateSparseAnalogMultinomialScaledMarginalCrossEntropyError_kernel");    
-    getGpu()._pbAccumulator->Download(); 
-    //printf("Error is %f\n",  (double)(getGpu()._pbAccumulator->_pSysData[0]) * ONEOVERERRORSCALE);
-    return (NNFloat)((double)(getGpu()._pbAccumulator->_pSysData[0]) * ONEOVERERRORSCALE);
 }
 
 template<typename T>
@@ -1197,14 +1156,11 @@ kCalculateL1Error_kernel(uint32_t position, uint32_t stride, NNFloat* pUnit, cha
     REDUCE_ERROR()
 }
 
-template<typename T> NNFloat kCalculateL1Error(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, T* pData)
+template<typename T> void kCalculateL1Error(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, T* pData)
 {
-    cudaMemset(getGpu()._data._pAccumulator, 0, sizeof(uint64_t));
     dim3 grid(batch, (stride + getGpu()._threadsPerBlock - 1) / getGpu()._threadsPerBlock);
     kCalculateL1Error_kernel<<<grid, getGpu()._threadsPerBlock>>>(position, stride, pUnit, pData);
     LAUNCHERROR("kCalculateL1Error_kernel");
-    getGpu()._pbAccumulator->Download();
-    return (NNFloat)((double)(getGpu()._pbAccumulator->_pSysData[0]) * ONEOVERERRORSCALE);
 }
 
 
@@ -1265,14 +1221,11 @@ kCalculateL2Error_kernel(uint32_t position, uint32_t stride, NNFloat* pUnit, cha
     REDUCE_ERROR()
 }
 
-template<typename T> NNFloat kCalculateL2Error(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, T* pData)
+template<typename T> void kCalculateL2Error(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, T* pData)
 {
-    cudaMemset(getGpu()._data._pAccumulator, 0, sizeof(uint64_t));
     dim3 grid(batch, (stride + getGpu()._threadsPerBlock - 1) / getGpu()._threadsPerBlock);
     kCalculateL2Error_kernel<<<grid, getGpu()._threadsPerBlock>>>(position, stride, pUnit, pData);
     LAUNCHERROR("kCalculateL2Error_kernel");    
-    getGpu()._pbAccumulator->Download();
-    return (NNFloat)((double)(getGpu()._pbAccumulator->_pSysData[0]) * ONEOVERERRORSCALE); 
 }
 
 template<typename T>
@@ -1334,14 +1287,11 @@ kCalculateCrossEntropyError_kernel(uint32_t position, uint32_t stride, NNFloat* 
     REDUCE_ERROR()
 }
 
-template<typename T> NNFloat kCalculateCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, T* pData)
+template<typename T> void kCalculateCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, T* pData)
 {
-    cudaMemset(getGpu()._data._pAccumulator, 0, sizeof(uint64_t));
     dim3 grid(batch, (stride + getGpu()._threadsPerBlock - 1) / getGpu()._threadsPerBlock);
     kCalculateCrossEntropyError_kernel<<<grid, getGpu()._threadsPerBlock>>>(position, stride, pUnit, pData);
     LAUNCHERROR("kCalculateCrossEntropyError_kernel");
-    getGpu()._pbAccumulator->Download();
-    return (NNFloat)((double)(getGpu()._pbAccumulator->_pSysData[0]) * ONEOVERERRORSCALE);
 }
 
 template<typename T>
@@ -1403,14 +1353,11 @@ kCalculateMultinomialCrossEntropyError_kernel(uint32_t position, uint32_t stride
     REDUCE_ERROR()
 }
 
-template<typename T> NNFloat kCalculateMultinomialCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, T* pData)
+template<typename T> void kCalculateMultinomialCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, T* pData)
 {
-    cudaMemset(getGpu()._data._pAccumulator, 0, sizeof(uint64_t));
     dim3 grid(batch, (stride + getGpu()._threadsPerBlock - 1) / getGpu()._threadsPerBlock);
     kCalculateMultinomialCrossEntropyError_kernel<<<grid, getGpu()._threadsPerBlock>>>(position, stride, pUnit, pData);
     LAUNCHERROR("kCalculateMultinomialCrossEntropyError_kernel");
-    getGpu()._pbAccumulator->Download();
-    return (NNFloat)((double)(getGpu()._pbAccumulator->_pSysData[0]) * ONEOVERERRORSCALE);
 }
 
 
@@ -1476,14 +1423,11 @@ kCalculateScaledMarginalCrossEntropyError_kernel(uint32_t position, uint32_t str
     REDUCE_ERROR()
 }
 
-template<typename T> NNFloat kCalculateScaledMarginalCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, T* pData)
+template<typename T> void kCalculateScaledMarginalCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, T* pData)
 {
-    cudaMemset(getGpu()._data._pAccumulator, 0, sizeof(uint64_t));
     dim3 grid(batch, (stride + getGpu()._threadsPerBlock - 1) / getGpu()._threadsPerBlock);
     kCalculateScaledMarginalCrossEntropyError_kernel<<<grid, getGpu()._threadsPerBlock>>>(position, stride, pUnit, pData);
     LAUNCHERROR("kCalculateScaledMarginalCrossEntropyError_kernel");
-    getGpu()._pbAccumulator->Download();
-    return (NNFloat)((double)(getGpu()._pbAccumulator->_pSysData[0]) * ONEOVERERRORSCALE);
 }
 
 
@@ -1548,14 +1492,11 @@ kCalculateMultinomialScaledMarginalCrossEntropyError_kernel(uint32_t position, u
     REDUCE_ERROR()
 }
 
-template<typename T> NNFloat kCalculateMultinomialScaledMarginalCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, T* pData)
+template<typename T> void kCalculateMultinomialScaledMarginalCrossEntropyError(uint32_t position, uint32_t batch, uint32_t stride, NNFloat* pUnit, T* pData)
 {
-    cudaMemset(getGpu()._data._pAccumulator, 0, sizeof(uint64_t));
     dim3 grid(batch, (stride + getGpu()._threadsPerBlock - 1) / getGpu()._threadsPerBlock);
     kCalculateMultinomialScaledMarginalCrossEntropyError_kernel<<<grid, getGpu()._threadsPerBlock>>>(position, stride, pUnit, pData);
     LAUNCHERROR("kCalculateMultinomialScaledMarginalCrossEntropyError_kernel");
-    getGpu()._pbAccumulator->Download();
-    return (NNFloat)((double)(getGpu()._pbAccumulator->_pSysData[0]) * ONEOVERERRORSCALE);
 }
 
 

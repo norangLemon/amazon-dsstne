@@ -248,7 +248,7 @@ void GpuContext::Startup(int argc, char** argv)
     cudaThreadSynchronize();
 
     // Create local accumulator
-    _pbAccumulator.reset(new GpuBuffer<unsigned long long int>((unsigned int)1, true));
+    _pbAccumulator.reset(new GpuBuffer<unsigned long long int>((unsigned int)2, true));
     _data._pAccumulator                             = _pbAccumulator->_pDevData;
 
     // Grab GPU parameters

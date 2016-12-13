@@ -1141,7 +1141,7 @@ void NNLayer::CalculateDropout(uint32_t batch)
     kCalculateDropout(_pbUnit->_pDevData, _pbDropout->_pDevData, batch, _localStride, _pDropout);
 }
 
-NNFloat NNLayer::CalculateError(uint32_t position, uint32_t batch, ErrorFunction ef)
+void NNLayer::CalculateError(uint32_t position, uint32_t batch, ErrorFunction ef)
 {
     if (_kind != Output)
     {
@@ -1154,22 +1154,26 @@ NNFloat NNLayer::CalculateError(uint32_t position, uint32_t batch, ErrorFunction
     switch (ef)
     {
         case L1:
-            return _pDataSet->CalculateL1Error(position, batch, _localStride, _pbUnit->_pDevData);
+            _pDataSet->CalculateL1Error(position, batch, _localStride, _pbUnit->_pDevData);
+            break;
 
         case L2:
-            return _pDataSet->CalculateL2Error(position, batch, _localStride, _pbUnit->_pDevData);  
+            _pDataSet->CalculateL2Error(position, batch, _localStride, _pbUnit->_pDevData);
+            break;
 
         case CrossEntropy:
             if (_activation == SoftMax)
-                return _pDataSet->CalculateMultinomialCrossEntropyError(position, batch, _localStride, _pbUnit->_pDevData);
+                _pDataSet->CalculateMultinomialCrossEntropyError(position, batch, _localStride, _pbUnit->_pDevData);
             else
-                return _pDataSet->CalculateCrossEntropyError(position, batch, _localStride, _pbUnit->_pDevData);
+                _pDataSet->CalculateCrossEntropyError(position, batch, _localStride, _pbUnit->_pDevData);
+            break;
 
         case ScaledMarginalCrossEntropy:
             if (_activation == SoftMax)
-                return _pDataSet->CalculateMultinomialScaledMarginalCrossEntropyError(position, batch, _localStride, _pbUnit->_pDevData);
-            else        
-                return _pDataSet->CalculateScaledMarginalCrossEntropyError(position, batch, _localStride, _pbUnit->_pDevData);
+                _pDataSet->CalculateMultinomialScaledMarginalCrossEntropyError(position, batch, _localStride, _pbUnit->_pDevData);
+            else
+                _pDataSet->CalculateScaledMarginalCrossEntropyError(position, batch, _localStride, _pbUnit->_pDevData);
+            break;
 
         case DataScaledMarginalCrossEntropy:
             if (_activation == SoftMax)
@@ -1180,11 +1184,10 @@ NNFloat NNLayer::CalculateError(uint32_t position, uint32_t batch, ErrorFunction
             }
             else
             {
-                return _pDataSet->CalculateDataScaledMarginalCrossEntropyError(position, batch, _localStride, _pbUnit->_pDevData);
+                _pDataSet->CalculateDataScaledMarginalCrossEntropyError(position, batch, _localStride, _pbUnit->_pDevData);
             }
+            break;
     }
-    
-    return (NNFloat)0.0;
 }
 
 void NNLayer::CalculateOutputDelta(uint32_t position, uint32_t batch, ErrorFunction ef)

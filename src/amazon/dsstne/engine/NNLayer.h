@@ -175,7 +175,7 @@ public:
     void ForwardPropagate(uint32_t position, uint32_t batch, bool bTraining = false);
     void BackPropagate(uint32_t position, uint32_t batch, NNFloat alpha);
     void CalculateOutputDelta(uint32_t position, uint32_t batch, ErrorFunction ef);
-    NNFloat CalculateError(uint32_t position, uint32_t batch, ErrorFunction ef);
+    void CalculateError(uint32_t position, uint32_t batch, ErrorFunction ef);
     void ClearUpdates();
     void GenerateDenoisingData();
 

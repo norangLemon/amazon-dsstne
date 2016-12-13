@@ -1408,20 +1408,16 @@ kCalculateRegularizationError_kernel(NNFloat* pWeight, uint64_t size)
 
     if ((threadIdx.x & cData._warpMask) == 0)
     {
-        atomicAdd(cData._pAccumulator, llitoulli(llrintf(ERRORSCALEF * error)));
+        atomicAdd(cData._pAccumulator + 1, llitoulli(llrintf(ERRORSCALEF * error)));
     }  
 }
 
 // Calculates raw weight decay/regularization error
-NNFloat kCalculateRegularizationError(NNFloat lambda, NNFloat* pWeight, uint64_t size)
+void kCalculateRegularizationError(NNFloat lambda, NNFloat* pWeight, uint64_t size)
 {
     uint32_t blocks         = CalculateBlocks(size);
-    cudaMemset(getGpu()._data._pAccumulator, 0, sizeof(uint64_t));
     kCalculateRegularizationError_kernel<<<blocks, getGpu()._threadsPerBlock>>>(pWeight, size);
     LAUNCHERROR("kCalculateRegularizationError_kernel");
-    getGpu()._pbAccumulator->Download(); 
-    //printf("Reg %llu %f\n", size, lambda * 0.5f * (double)(getGpu()._pbAccumulator->_pSysData[0]) * ONEOVERERRORSCALE);
-    return (NNFloat)(lambda * 0.5f * (double)(getGpu()._pbAccumulator->_pSysData[0]) * ONEOVERERRORSCALE);
 }
 
 // Instantiates allowable templated functions so we can hide the implementations here

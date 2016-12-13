@@ -105,7 +105,7 @@ public:
     void ClearVelocity();
     void ClearUpdates();
     void UpdateWeights(TrainingMode trainingMode, uint32_t batch, NNFloat alpha, NNFloat lambda, NNFloat mu);
-    NNFloat CalculateRegularizationError(NNFloat lambda);
+    void CalculateRegularizationError(NNFloat lambda);
     void RefreshState(NNNetwork* pNetwork, TrainingMode trainingMode);
     void Lock();
     void Unlock();
