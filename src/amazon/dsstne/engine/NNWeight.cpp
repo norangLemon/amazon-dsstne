@@ -442,33 +442,34 @@ void NNWeight::UpdateWeights(TrainingMode trainingMode, uint32_t batch, NNFloat 
     if (_bLocked)
         return; 
 
+    auto stream = getGpu().getStream();
     // Update weights if the original holder or unshared in general
     if (!_bShared)
     {
         switch (trainingMode)
         {
             case SGD:
-                kSGDUpdateWeights(alpha, lambda, _size, _pbWeightGradient->_pDevData, _pbWeight->_pDevData);
+                kSGDUpdateWeights(alpha, lambda, _size, _pbWeightGradient->_pDevData, _pbWeight->_pDevData, stream);
                 break;
                 
             case Momentum:
-                kMomentumUpdateWeights(alpha, lambda, mu, _size, _pbWeightVelocity->_pDevData, _pbWeightGradient->_pDevData, _pbWeight->_pDevData);
+                kMomentumUpdateWeights(alpha, lambda, mu, _size, _pbWeightVelocity->_pDevData, _pbWeightGradient->_pDevData, _pbWeight->_pDevData, stream);
                 break;
                         
             case AdaGrad:
-                kAdaGradUpdateWeights(alpha, lambda, _size, _pbWeightVelocity->_pDevData, _pbWeightGradient->_pDevData, _pbWeight->_pDevData);
+                kAdaGradUpdateWeights(alpha, lambda, _size, _pbWeightVelocity->_pDevData, _pbWeightGradient->_pDevData, _pbWeight->_pDevData, stream);
                 break;
                         
             case Nesterov:
-                kNesterovUpdateWeights(alpha, lambda, mu, _size, _pbWeightVelocity->_pDevData, _pbWeightGradient->_pDevData, _pbWeight->_pDevData);
+                kNesterovUpdateWeights(alpha, lambda, mu, _size, _pbWeightVelocity->_pDevData, _pbWeightGradient->_pDevData, _pbWeight->_pDevData, stream);
                 break;
                         
             case RMSProp:
-                kRMSPropUpdateWeights(alpha, lambda, mu, _size, _pbWeightVelocity->_pDevData, _pbWeightGradient->_pDevData, _pbWeight->_pDevData);
+                kRMSPropUpdateWeights(alpha, lambda, mu, _size, _pbWeightVelocity->_pDevData, _pbWeightGradient->_pDevData, _pbWeight->_pDevData, stream);
                 break;
 
             case AdaDelta:
-                kAdaDeltaUpdateWeights(lambda, mu, _size, _pbWeightVelocity->_pDevData, _pbWeightGradient->_pDevData, _pbWeightGradientVelocity->_pDevData, _pbWeight->_pDevData);
+                kAdaDeltaUpdateWeights(lambda, mu, _size, _pbWeightVelocity->_pDevData, _pbWeightGradient->_pDevData, _pbWeightGradientVelocity->_pDevData, _pbWeight->_pDevData, stream);
                 break;     
         }
     }
@@ -476,60 +477,62 @@ void NNWeight::UpdateWeights(TrainingMode trainingMode, uint32_t batch, NNFloat 
     // Biases are unshared so always update them
     if (_transform == Linear)
     {
+        auto stream = getGpu().getStream();
         switch (trainingMode)
         {
             case SGD:
-                kSGDUpdateBiases(alpha, batch, _biasSize, _outputLayer.GetDeltaBuffer(), _pbBias->_pDevData);
+                kSGDUpdateBiases(alpha, batch, _biasSize, _outputLayer.GetDeltaBuffer(), _pbBias->_pDevData, stream);
                 break;
 
             case Momentum:
-                kMomentumUpdateBiases(alpha, mu, batch, _biasSize, _outputLayer.GetDeltaBuffer(), _pbBiasVelocity->_pDevData, _pbBias->_pDevData);
+                kMomentumUpdateBiases(alpha, mu, batch, _biasSize, _outputLayer.GetDeltaBuffer(), _pbBiasVelocity->_pDevData, _pbBias->_pDevData, stream);
                 break;
                     
             case AdaGrad:
-                kAdaGradUpdateBiases(alpha, batch, _outputLayer.LocalStride(), _outputLayer.GetDeltaBuffer(), _pbBiasVelocity->_pDevData, _pbBias->_pDevData);
+                kAdaGradUpdateBiases(alpha, batch, _outputLayer.LocalStride(), _outputLayer.GetDeltaBuffer(), _pbBiasVelocity->_pDevData, _pbBias->_pDevData, stream);
                 break;
                     
             case Nesterov:
-                kNesterovUpdateBiases(alpha, mu, batch, _outputLayer.LocalStride(), _outputLayer.GetDeltaBuffer(), _pbBiasVelocity->_pDevData, _pbBias->_pDevData);
+                kNesterovUpdateBiases(alpha, mu, batch, _outputLayer.LocalStride(), _outputLayer.GetDeltaBuffer(), _pbBiasVelocity->_pDevData, _pbBias->_pDevData, stream);
                 break;
                     
             case RMSProp:
-                kRMSPropUpdateBiases(alpha, mu, batch, _outputLayer.LocalStride(), _outputLayer.GetDeltaBuffer(), _pbBiasVelocity->_pDevData, _pbBias->_pDevData);
+                kRMSPropUpdateBiases(alpha, mu, batch, _outputLayer.LocalStride(), _outputLayer.GetDeltaBuffer(), _pbBiasVelocity->_pDevData, _pbBias->_pDevData, stream);
                 break;
                 
             case AdaDelta:
-                kAdaDeltaUpdateBiases(mu, batch, _outputLayer.LocalStride(), _outputLayer.GetDeltaBuffer(), _pbBiasVelocity->_pDevData, _pbBiasGradientVelocity->_pDevData, _pbBias->_pDevData);
+                kAdaDeltaUpdateBiases(mu, batch, _outputLayer.LocalStride(), _outputLayer.GetDeltaBuffer(), _pbBiasVelocity->_pDevData, _pbBiasGradientVelocity->_pDevData, _pbBias->_pDevData, stream);
                 break;                         
         }
     }
     else
     {
+        auto stream = getGpu().getStream();
         // Because cuDNN is stupid, resort to hijacking weight update routines to compensate for the stupid within cuDNN
         switch (trainingMode)
         {
             case SGD:
-                kSGDUpdateWeights(alpha, (NNFloat)0.0, _biasSize, _pbBiasGradient->_pDevData, _pbBias->_pDevData);
+                kSGDUpdateWeights(alpha, (NNFloat)0.0, _biasSize, _pbBiasGradient->_pDevData, _pbBias->_pDevData, stream);
                 break;
 
             case Momentum:
-                kMomentumUpdateWeights(alpha, (NNFloat)0.0, mu, _biasSize, _pbBiasVelocity->_pDevData, _pbBiasGradient->_pDevData, _pbBias->_pDevData);
+                kMomentumUpdateWeights(alpha, (NNFloat)0.0, mu, _biasSize, _pbBiasVelocity->_pDevData, _pbBiasGradient->_pDevData, _pbBias->_pDevData, stream);
                 break;
                     
             case AdaGrad:
-                kAdaGradUpdateWeights(alpha, (NNFloat)0.0, _biasSize, _pbBiasVelocity->_pDevData, _pbBiasGradient->_pDevData, _pbBias->_pDevData);
+                kAdaGradUpdateWeights(alpha, (NNFloat)0.0, _biasSize, _pbBiasVelocity->_pDevData, _pbBiasGradient->_pDevData, _pbBias->_pDevData, stream);
                 break;
                         
             case Nesterov:
-                kNesterovUpdateWeights(alpha, (NNFloat)0.0, mu, _biasSize, _pbBiasVelocity->_pDevData, _pbBiasGradient->_pDevData, _pbBias->_pDevData);
+                kNesterovUpdateWeights(alpha, (NNFloat)0.0, mu, _biasSize, _pbBiasVelocity->_pDevData, _pbBiasGradient->_pDevData, _pbBias->_pDevData, stream);
                 break;
                         
             case RMSProp:
-                kRMSPropUpdateWeights(alpha, (NNFloat)0.0, mu, _biasSize, _pbBiasVelocity->_pDevData, _pbBiasGradient->_pDevData, _pbBias->_pDevData);
+                kRMSPropUpdateWeights(alpha, (NNFloat)0.0, mu, _biasSize, _pbBiasVelocity->_pDevData, _pbBiasGradient->_pDevData, _pbBias->_pDevData, stream);
                 break;
 
             case AdaDelta:
-                kAdaDeltaUpdateWeights((NNFloat)0.0, mu, _biasSize, _pbBiasVelocity->_pDevData, _pbBiasGradient->_pDevData, _pbBiasGradientVelocity->_pDevData, _pbBias->_pDevData);
+                kAdaDeltaUpdateWeights((NNFloat)0.0, mu, _biasSize, _pbBiasVelocity->_pDevData, _pbBiasGradient->_pDevData, _pbBiasGradientVelocity->_pDevData, _pbBias->_pDevData, stream);
                 break;                 
         }       
     }
@@ -538,7 +541,7 @@ void NNWeight::UpdateWeights(TrainingMode trainingMode, uint32_t batch, NNFloat 
     if ((_norm > (NNFloat)0.0) && (!_bShared))
     {
         if (getGpu()._numprocs == 1)  // TODO Detect data-parallel here
-            kNormalizeWeights(_norm, _outputLayer.Stride(), _inputLayer.LocalStride(), _pbWeight->_pDevData);
+            kNormalizeWeights(_norm, _outputLayer.Stride(), _inputLayer.LocalStride(), _pbWeight->_pDevData, stream);
         else
         {
             NNFloat* pMagnitude                 = getGpu()._pNetwork->GetScratchBuffer(_outputLayer.Stride());

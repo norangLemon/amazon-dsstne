@@ -1522,10 +1522,10 @@ kSGDUpdateWeights_kernel(NNFloat alpha, NNFloat lambda, uint64_t size, NNFloat* 
     }
 }
 
-void kSGDUpdateWeights(NNFloat alpha, NNFloat lambda, uint64_t size, NNFloat* pWeightGradient, NNFloat* pWeight)
+void kSGDUpdateWeights(NNFloat alpha, NNFloat lambda, uint64_t size, NNFloat* pWeightGradient, NNFloat* pWeight, cudaStream_t stream)
 {
     uint32_t blocks             = CalculateBlocks(size);
-    kSGDUpdateWeights_kernel<<<blocks, getGpu()._threadsPerBlock>>>(alpha, lambda, size, pWeightGradient, pWeight);
+    kSGDUpdateWeights_kernel<<<blocks, getGpu()._threadsPerBlock, 0, stream>>>(alpha, lambda, size, pWeightGradient, pWeight);
     LAUNCHERROR("kMomentumUpdateWeights_kernel");
 }
 
@@ -1553,10 +1553,10 @@ kSGDUpdateBiases_kernel(NNFloat alpha, uint32_t batch, uint32_t width, NNFloat* 
     }
 }
 
-void kSGDUpdateBiases(NNFloat alpha, uint32_t batch, uint32_t width, NNFloat* pDelta, NNFloat* pBias)
+void kSGDUpdateBiases(NNFloat alpha, uint32_t batch, uint32_t width, NNFloat* pDelta, NNFloat* pBias, cudaStream_t stream)
 {
     uint32_t blocks             = CalculateBlocks(width);
-    kSGDUpdateBiases_kernel<<<blocks, getGpu()._threadsPerBlock>>>(alpha, batch, width, pDelta, pBias);
+    kSGDUpdateBiases_kernel<<<blocks, getGpu()._threadsPerBlock, 0, stream>>>(alpha, batch, width, pDelta, pBias);
     LAUNCHERROR("kSGDUpdateBiases_kernel");
 }
 
@@ -1577,10 +1577,10 @@ kMomentumUpdateWeights_kernel(NNFloat alpha, NNFloat lambda, NNFloat mu, uint64_
     }
 }
 
-void kMomentumUpdateWeights(NNFloat alpha, NNFloat lambda, NNFloat mu, uint64_t size, NNFloat* pWeightVelocity, NNFloat* pWeightGradient, NNFloat* pWeight)
+void kMomentumUpdateWeights(NNFloat alpha, NNFloat lambda, NNFloat mu, uint64_t size, NNFloat* pWeightVelocity, NNFloat* pWeightGradient, NNFloat* pWeight, cudaStream_t stream)
 {
     uint32_t blocks             = CalculateBlocks(size);
-    kMomentumUpdateWeights_kernel<<<blocks, getGpu()._threadsPerBlock>>>(alpha, lambda, mu, size, pWeightVelocity, pWeightGradient, pWeight);
+    kMomentumUpdateWeights_kernel<<<blocks, getGpu()._threadsPerBlock, 0, stream>>>(alpha, lambda, mu, size, pWeightVelocity, pWeightGradient, pWeight);
     LAUNCHERROR("kMomentumUpdateWeights_kernel");
 }
 
@@ -1610,10 +1610,10 @@ kMomentumUpdateBiases_kernel(NNFloat alpha, NNFloat mu, uint32_t batch, uint32_t
     }
 }
 
-void kMomentumUpdateBiases(NNFloat alpha, NNFloat mu, uint32_t batch, uint32_t width, NNFloat* pDelta, NNFloat* pBiasVelocity, NNFloat* pBias)
+void kMomentumUpdateBiases(NNFloat alpha, NNFloat mu, uint32_t batch, uint32_t width, NNFloat* pDelta, NNFloat* pBiasVelocity, NNFloat* pBias, cudaStream_t stream)
 {
     uint32_t blocks             = CalculateBlocks(width);
-    kMomentumUpdateBiases_kernel<<<blocks, getGpu()._threadsPerBlock>>>(alpha, mu, batch, width, pDelta, pBiasVelocity, pBias);
+    kMomentumUpdateBiases_kernel<<<blocks, getGpu()._threadsPerBlock, 0, stream>>>(alpha, mu, batch, width, pDelta, pBiasVelocity, pBias);
     LAUNCHERROR("kMomentumUpdateBiases_kernel");
 }
 
@@ -1634,10 +1634,10 @@ kAdaGradUpdateWeights_kernel(NNFloat alpha, NNFloat lambda, uint64_t size, NNFlo
     }
 }
 
-void kAdaGradUpdateWeights(NNFloat alpha, NNFloat lambda, uint64_t size, NNFloat* pWeightVelocity, NNFloat* pWeightGradient, NNFloat* pWeight)
+void kAdaGradUpdateWeights(NNFloat alpha, NNFloat lambda, uint64_t size, NNFloat* pWeightVelocity, NNFloat* pWeightGradient, NNFloat* pWeight, cudaStream_t stream)
 {
     unsigned long blocks        = CalculateBlocks(size);
-    kAdaGradUpdateWeights_kernel<<<blocks, getGpu()._threadsPerBlock>>>(alpha, lambda, size, pWeightVelocity, pWeightGradient, pWeight);
+    kAdaGradUpdateWeights_kernel<<<blocks, getGpu()._threadsPerBlock, 0, stream>>>(alpha, lambda, size, pWeightVelocity, pWeightGradient, pWeight);
     LAUNCHERROR("kAdaGradUpdateWeights_kernel");
 }
 
@@ -1667,10 +1667,10 @@ kAdaGradUpdateBiases_kernel(NNFloat alpha, uint32_t batch, uint32_t width, NNFlo
     }
 }
 
-void kAdaGradUpdateBiases(NNFloat alpha, uint32_t batch, uint32_t width, NNFloat* pDelta, NNFloat* pBiasVelocity, NNFloat* pBias)
+void kAdaGradUpdateBiases(NNFloat alpha, uint32_t batch, uint32_t width, NNFloat* pDelta, NNFloat* pBiasVelocity, NNFloat* pBias, cudaStream_t stream)
 {
     uint32_t blocks             = CalculateBlocks(width);
-    kAdaGradUpdateBiases_kernel<<<blocks, getGpu()._threadsPerBlock>>>(alpha, batch, width, pDelta, pBiasVelocity, pBias);
+    kAdaGradUpdateBiases_kernel<<<blocks, getGpu()._threadsPerBlock, 0, stream>>>(alpha, batch, width, pDelta, pBiasVelocity, pBias);
     LAUNCHERROR("kAdaGradUpdateBiases_kernel");
 }
 
@@ -1695,10 +1695,10 @@ kAdaDeltaUpdateWeights_kernel(NNFloat lambda, NNFloat mu, uint64_t size, NNFloat
     }
 }
 
-void kAdaDeltaUpdateWeights(NNFloat lambda, NNFloat mu, uint64_t size, NNFloat* pWeightVelocity, NNFloat* pWeightGradient, NNFloat* pWeightGradientVelocity, NNFloat* pWeight)
+void kAdaDeltaUpdateWeights(NNFloat lambda, NNFloat mu, uint64_t size, NNFloat* pWeightVelocity, NNFloat* pWeightGradient, NNFloat* pWeightGradientVelocity, NNFloat* pWeight, cudaStream_t stream)
 {
     unsigned long blocks        = CalculateBlocks(size);
-    kAdaDeltaUpdateWeights_kernel<<<blocks, getGpu()._threadsPerBlock>>>(mu, lambda, size, pWeightVelocity, pWeightGradient, pWeightGradientVelocity, pWeight);
+    kAdaDeltaUpdateWeights_kernel<<<blocks, getGpu()._threadsPerBlock, 0, stream>>>(mu, lambda, size, pWeightVelocity, pWeightGradient, pWeightGradientVelocity, pWeight);
     LAUNCHERROR("kAdaDeltaUpdateWeights_kernel");
 }
 
@@ -1732,10 +1732,10 @@ kAdaDeltaUpdateBiases_kernel(NNFloat mu, uint32_t batch, uint32_t width, NNFloat
     }
 }
 
-void kAdaDeltaUpdateBiases(NNFloat mu, uint32_t batch, uint32_t width, NNFloat* pDelta, NNFloat* pBiasVelocity, NNFloat* pBiasGradientVelocity, NNFloat* pBias)
+void kAdaDeltaUpdateBiases(NNFloat mu, uint32_t batch, uint32_t width, NNFloat* pDelta, NNFloat* pBiasVelocity, NNFloat* pBiasGradientVelocity, NNFloat* pBias, cudaStream_t stream)
 {
     uint32_t blocks             = CalculateBlocks(width);
-    kAdaDeltaUpdateBiases_kernel<<<blocks, getGpu()._threadsPerBlock>>>(mu, batch, width, pDelta, pBiasVelocity, pBiasGradientVelocity, pBias);
+    kAdaDeltaUpdateBiases_kernel<<<blocks, getGpu()._threadsPerBlock, 0, stream>>>(mu, batch, width, pDelta, pBiasVelocity, pBiasGradientVelocity, pBias);
     LAUNCHERROR("kAdaDeltaUpdateBiases_kernel");
 }
 
@@ -1756,10 +1756,10 @@ kNesterovUpdateWeights_kernel(NNFloat alpha, NNFloat lambda, NNFloat mu, uint64_
     }
 }
 
-void kNesterovUpdateWeights(NNFloat alpha, NNFloat lambda, NNFloat mu, uint64_t size, NNFloat* pWeightVelocity, NNFloat* pWeightGradient, NNFloat* pWeight)
+void kNesterovUpdateWeights(NNFloat alpha, NNFloat lambda, NNFloat mu, uint64_t size, NNFloat* pWeightVelocity, NNFloat* pWeightGradient, NNFloat* pWeight, cudaStream_t stream)
 {
     uint32_t blocks             = CalculateBlocks(size);
-    kNesterovUpdateWeights_kernel<<<blocks, getGpu()._threadsPerBlock>>>(alpha, lambda, mu, size, pWeightVelocity, pWeightGradient, pWeight);
+    kNesterovUpdateWeights_kernel<<<blocks, getGpu()._threadsPerBlock, 0, stream>>>(alpha, lambda, mu, size, pWeightVelocity, pWeightGradient, pWeight);
     LAUNCHERROR("kNesterovUpdateWeights_kernel");
 }
 
@@ -1789,10 +1789,10 @@ kNesterovUpdateBiases_kernel(NNFloat alpha, NNFloat mu, uint32_t batch, uint32_t
     }
 }
 
-void kNesterovUpdateBiases(NNFloat alpha, NNFloat mu, uint32_t batch, uint32_t width, NNFloat* pDelta, NNFloat* pBiasVelocity, NNFloat* pBias)
+void kNesterovUpdateBiases(NNFloat alpha, NNFloat mu, uint32_t batch, uint32_t width, NNFloat* pDelta, NNFloat* pBiasVelocity, NNFloat* pBias, cudaStream_t stream)
 {
     uint32_t blocks             = CalculateBlocks(width);
-    kNesterovUpdateBiases_kernel<<<blocks, getGpu()._threadsPerBlock>>>(alpha, mu, batch, width, pDelta, pBiasVelocity, pBias);
+    kNesterovUpdateBiases_kernel<<<blocks, getGpu()._threadsPerBlock, 0, stream>>>(alpha, mu, batch, width, pDelta, pBiasVelocity, pBias);
     LAUNCHERROR("kNesterovUpdateBiases_kernel");
 }
 
@@ -1853,10 +1853,10 @@ kRMSPropUpdateWeights_kernel(NNFloat alpha, NNFloat lambda, NNFloat mu, uint64_t
     }
 }
 
-void kRMSPropUpdateWeights(NNFloat alpha, NNFloat lambda, NNFloat mu, uint64_t size, NNFloat* pWeightVelocity, NNFloat* pWeightGradient, NNFloat* pWeight)
+void kRMSPropUpdateWeights(NNFloat alpha, NNFloat lambda, NNFloat mu, uint64_t size, NNFloat* pWeightVelocity, NNFloat* pWeightGradient, NNFloat* pWeight, cudaStream_t stream)
 {
     uint32_t blocks             = CalculateBlocks(size);
-    kRMSPropUpdateWeights_kernel<<<blocks, getGpu()._threadsPerBlock>>>(alpha, lambda, mu, size, pWeightVelocity, pWeightGradient, pWeight);
+    kRMSPropUpdateWeights_kernel<<<blocks, getGpu()._threadsPerBlock, 0, stream>>>(alpha, lambda, mu, size, pWeightVelocity, pWeightGradient, pWeight);
     LAUNCHERROR("kRMSPropUpdateWeights_kernel");
 }
 
@@ -1886,10 +1886,10 @@ kRMSPropUpdateBiases_kernel(NNFloat alpha, NNFloat mu, uint32_t batch, uint32_t 
     }
 }
 
-void kRMSPropUpdateBiases(NNFloat alpha, NNFloat mu, uint32_t batch, uint32_t width, NNFloat* pDelta, NNFloat* pBiasVelocity, NNFloat* pBias)
+void kRMSPropUpdateBiases(NNFloat alpha, NNFloat mu, uint32_t batch, uint32_t width, NNFloat* pDelta, NNFloat* pBiasVelocity, NNFloat* pBias, cudaStream_t stream)
 {
     uint32_t blocks             = CalculateBlocks(width);
-    kRMSPropUpdateBiases_kernel<<<blocks, getGpu()._threadsPerBlock>>>(alpha, mu, batch, width, pDelta, pBiasVelocity, pBias);
+    kRMSPropUpdateBiases_kernel<<<blocks, getGpu()._threadsPerBlock, 0, stream>>>(alpha, mu, batch, width, pDelta, pBiasVelocity, pBias);
     LAUNCHERROR("kRMSPropUpdateBiases_kernel");
 }
 
@@ -2522,10 +2522,10 @@ kNormalizeWeights_kernel(NNFloat norm, uint32_t outputStride, uint32_t inputStri
 
 }
 
-void kNormalizeWeights(NNFloat norm, uint32_t outputStride, uint32_t inputStride, NNFloat* pWeight)
+void kNormalizeWeights(NNFloat norm, uint32_t outputStride, uint32_t inputStride, NNFloat* pWeight, cudaStream_t stream)
 {
     uint32_t blocks                         = (outputStride + 127) / 128;
-    kNormalizeWeights_kernel<<<blocks, 128>>>(norm, outputStride, inputStride, pWeight); 
+    kNormalizeWeights_kernel<<<blocks, 128, 0, stream>>>(norm, outputStride, inputStride, pWeight); 
     LAUNCHERROR("kNormalizeWeights_kernel");   
 }
 
