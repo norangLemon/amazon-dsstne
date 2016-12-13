@@ -762,6 +762,7 @@ void NNNetwork::ShuffleIndices()
 
         // Generate random keys
         curandGenerate(getGpu()._RNG, _pShuffleIndexSort->GetKeyPointer(), _shuffleIndices);
+        getGpu().synchronizeRNGStream();
 
         // Sort by keys
         _pShuffleIndexSort->Sort();
@@ -1461,6 +1462,7 @@ NNFloat NNNetwork::Train(uint32_t epochs, NNFloat alpha, NNFloat lambda, NNFloat
                     l->GenerateDenoisingData();
             }
         }
+        getGpu().synchronizeRNGStream();
 
         // Shuffle indices if shuffle is turned on
         if (_bShuffleIndices)

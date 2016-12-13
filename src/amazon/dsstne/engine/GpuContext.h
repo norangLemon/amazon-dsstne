@@ -18,6 +18,8 @@
 
 using std::unique_ptr;
 
+static const size_t NUMBER_OF_STREAM = 10;
+
 struct GpuContext {
     enum SM_VERSION
     {
@@ -66,7 +68,7 @@ struct GpuContext {
     bool                                _bSingleNode;               // Flag to indicate MPI run is all on one node
     bool                                _bP2P;                      // Flag to indicate P2P connectivity between all processes
 
-    cudaStream_t _streams[10];
+    cudaStream_t _streams[NUMBER_OF_STREAM];
     size_t _currentStream;
 
     // Methods
@@ -84,6 +86,7 @@ struct GpuContext {
     static unsigned int Pad(unsigned int x);
 
     cudaStream_t getStream();
+    void synchronizeRNGStream();
 };
 
 extern struct GpuContext& getGpu();

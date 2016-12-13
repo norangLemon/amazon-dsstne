@@ -2614,6 +2614,7 @@ void kCalculateDropout(NNFloat* pUnit, NNFloat* pRandom, uint32_t batch, uint32_
     curandGenerateUniform(getGpu()._RNG, pRandom, batch * stride);
     unsigned long blocks                = CalculateBlocks(batch * stride);
     NNFloat scale                       = (NNFloat)1.0 / ((NNFloat)1.0 - p);
+    getGpu().synchronizeRNGStream();
     kCalculateDropout_kernel<<<blocks, getGpu()._threadsPerBlock>>>(pUnit, pRandom, p, scale, batch * stride);
     LAUNCHERROR("kCalculateDropout_kernel");
 }

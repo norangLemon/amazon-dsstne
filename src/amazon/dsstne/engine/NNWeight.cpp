@@ -243,6 +243,7 @@ void NNWeight::Randomize()
             curandGenerateUniform(getGpu()._RNG, _pbWeight->_pDevData, _size);
             scale               = _outputLayer.WeightInitScale() * 2.0f * sqrtf(3.0f / _outputLayer.Stride());
             bias                = 0.5f * scale;                 
+            getGpu().synchronizeRNGStream();
             kScaleAndBias(_pbWeight->_pDevData, _size, scale, bias);
             break;
             
@@ -252,6 +253,7 @@ void NNWeight::Randomize()
             curandGenerateUniform(getGpu()._RNG, _pbWeight->_pDevData, _size);
             scale               = _outputLayer.WeightInitScale() * sqrtf(6.0f / (_outputLayer.Stride() + _inputLayer.Stride()));
             bias                = 0.5f * scale;
+            getGpu().synchronizeRNGStream();
             kScaleAndBias(_pbWeight->_pDevData, _size, scale, bias);
             break;
      
@@ -260,24 +262,28 @@ void NNWeight::Randomize()
             curandGenerateUniform(getGpu()._RNG, _pbWeight->_pDevData, _size);
             scale               = 2.0f * _outputLayer.WeightInitScale();
             bias                = 0.5f * scale;                 
+            getGpu().synchronizeRNGStream();
             kScaleAndBias(_pbWeight->_pDevData, _size, scale, bias);  
             break;
             
         case Gaussian:
             // Initialize weights to N(0, _weightInitScale)
             curandGenerateNormal(getGpu()._RNG, _pbWeight->_pDevData, _size, 0.0f, _outputLayer.WeightInitScale());
+            getGpu().synchronizeRNGStream();
             break;        
             
         case UnitBall:      
             // Initialize weights uniformly from 0 to _weightInitScale  
             curandGenerateUniform(getGpu()._RNG, _pbWeight->_pDevData, _size);
             scale               = _outputLayer.WeightInitScale();
+            getGpu().synchronizeRNGStream();
             kScaleAndBias(_pbWeight->_pDevData, _size, scale, 0.0f);     
             break;
           
         case Constant:
             // Initialize all weights to _weightInitScale
             cudaMemset(_pbWeight->_pDevData, 0, _size * sizeof(NNFloat));
+            getGpu().synchronizeRNGStream();
             kScaleAndBias(_pbWeight->_pDevData, _size, (NNFloat)0.0, _outputLayer.WeightInitScale());
             break;
         };

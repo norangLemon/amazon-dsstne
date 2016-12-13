@@ -247,7 +247,7 @@ void GpuContext::Startup(int argc, char** argv)
     RTERROR(status, "GpuContext::Startup: Error setting CUDA device");
     _device                                         = device;
 
-    for (size_t i = 0; i < 10; i += 1) {
+    for (size_t i = 0; i < NUMBER_OF_STREAM; i += 1) {
         status = cudaStreamCreate(_streams + i);
         if (status != cudaSuccess) {
             printf("GpuContext::Startup: Error create %lu-th stream", i);
@@ -401,6 +401,8 @@ void GpuContext::Startup(int argc, char** argv)
         exit(-1);
     }
     printf("GpuContext::Startup: GPU for process %d initialized.\n", device);
+
+    curandSetStream(_RNG, _streams[NUMBER_OF_STREAM - 1]);
 }
 
 void GpuContext::CopyConstants()
@@ -522,8 +524,13 @@ unsigned int GpuContext::Pad(unsigned int x)
 cudaStream_t GpuContext::getStream()
 {
     const size_t current = _currentStream++;
-    if (_currentStream > 10) {
+    if (_currentStream >= (NUMBER_OF_STREAM - 1)) {
         _currentStream = 0;
     }
     return _streams[current];
+}
+
+void GpuContext::synchronizeRNGStream()
+{
+    cudaStreamSynchronize(_streams[NUMBER_OF_STREAM - 1]);
 }
