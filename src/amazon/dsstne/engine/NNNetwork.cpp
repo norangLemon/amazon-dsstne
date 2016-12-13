@@ -1432,6 +1432,9 @@ NNFloat NNNetwork::Train(uint32_t epochs, NNFloat alpha, NNFloat lambda, NNFloat
     {
         for (uint32_t i = 0; i < _vWeight.size(); i++)
             _vWeight[i]->ClearVelocity();
+        if (_vWeight.size() != 0) {
+            cudaDeviceSynchronize();
+        }
     } 
 
     NNFloat total_error_training                            = (NNFloat)0.0;
@@ -2275,6 +2278,9 @@ bool NNNetwork::Validate()
     {
         for (uint32_t i = 0; i < _vWeight.size(); i++)
             _vWeight[i]->ClearVelocity();
+        if (_vWeight.size() != 0) {
+            cudaDeviceSynchronize();
+        }
     }
 
     // Shuffle indices if shuffle is turned on

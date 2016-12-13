@@ -217,12 +217,12 @@ NNWeight::~NNWeight()
 
 void NNWeight::ClearVelocity()
 {
-    cudaMemset(_pbWeightVelocity->_pDevData, 0, _size * sizeof(NNFloat));
-    cudaMemset(_pbBiasVelocity->_pDevData, 0, _biasSize * sizeof(NNFloat));
+    cudaMemsetAsync(_pbWeightVelocity->_pDevData, 0, _size * sizeof(NNFloat), getGpu().getStream());
+    cudaMemsetAsync(_pbBiasVelocity->_pDevData, 0, _biasSize * sizeof(NNFloat), getGpu().getStream());
     if (_pbWeightGradientVelocity)
-        cudaMemset(_pbWeightGradientVelocity->_pDevData, 0, _size * sizeof(NNFloat));
+        cudaMemsetAsync(_pbWeightGradientVelocity->_pDevData, 0, _size * sizeof(NNFloat), getGpu().getStream());
     if (_pbBiasGradientVelocity)
-        cudaMemset(_pbBiasGradientVelocity->_pDevData, 0, _biasSize * sizeof(NNFloat));
+        cudaMemsetAsync(_pbBiasGradientVelocity->_pDevData, 0, _biasSize * sizeof(NNFloat), getGpu().getStream());
 }
 
 void NNWeight::ClearGradient()
