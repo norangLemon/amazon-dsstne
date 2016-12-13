@@ -21,7 +21,10 @@
     },
     "Layers" : [
         { "Name" : "Input", "Kind" : "Input", "N" : "auto", "DataSet" : "gl_input", "Sparse" : true },
-        { "Name" : "Hidden", "Kind" : "Hidden", "Type" : "FullyConnected", "N" : 128, "Activation" : "Sigmoid", "Sparse" : true },
+        { "Name" : "Hidden1", "Kind" : "Hidden", "Type" : "FullyConnected", "N" : 128, "Activation" : "Sigmoid", "Sparse" : true },
+        { "Name" : "Hidden2", "Kind" : "Hidden", "Type" : "FullyConnected", "N" : 64, "Activation" : "Sigmoid", "Sparse" : true },
+        { "Name" : "Hidden3", "Kind" : "Hidden", "Type" : "FullyConnected", "N" : 64, "Activation" : "Sigmoid", "Sparse" : true },
+        { "Name" : "Hidden4", "Kind" : "Hidden", "Type" : "FullyConnected", "N" : 128, "Activation" : "Sigmoid", "Sparse" : true },
         { "Name" : "Output", "Kind" : "Output", "Type" : "FullyConnected", "DataSet" : "gl_output", "N" : "auto", "Activation" : "Sigmoid", "Sparse" : true }
     ],
 
