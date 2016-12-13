@@ -2303,7 +2303,7 @@ bool NNNetwork::Validate()
     for (int id =0; id < _vWeight.size(); id++) {
         NNWeight* w = _vWeight[id];
 
-        vWeightGradient.push_back(vector<NNFloat>(w->CPUWeight().size()));
+        vWeightGradient.emplace_back(w->CPUWeight().size());
         w->DownloadWeight();
         w->DownloadBias();
         w->WeightGradient()->Download(vWeightGradient.back().data());
@@ -2320,7 +2320,7 @@ bool NNNetwork::Validate()
 
     for (int id = 0; id < _vWeight.size(); id++) {        
         NNWeight* w = _vWeight[id];
-        vBiasGradient.push_back(vector<NNFloat>(w->CPUBias().size()));
+        vBiasGradient.emplace_back(w->CPUBias().size());
         vector<NNFloat>& bias = vBiasGradient[id];
 
         // Display information about current weight set
